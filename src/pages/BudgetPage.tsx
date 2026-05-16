@@ -75,7 +75,6 @@ export default function BudgetsPage() {
     setSaving(true)
     setError('')
     try {
-      // upsert handles both create and update
       await api.post('/budgets', {
         categoryId: form.categoryId,
         amount: Number(form.amount),
@@ -103,13 +102,12 @@ export default function BudgetsPage() {
     return '#10b981'
   }
 
-  // When editing, only show the category being edited
   const availableCategories = editBudget
     ? categories.filter((c) => c.id === editBudget.budget.category.id)
     : categories
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-white text-xl font-semibold">Budgets</h1>
@@ -123,7 +121,6 @@ export default function BudgetsPage() {
         </button>
       </div>
 
-      {/* Form modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-[#0a0d12] border border-white/10 rounded-xl p-6 w-full max-w-sm">
@@ -132,9 +129,7 @@ export default function BudgetsPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">
-                  Category
-                </label>
+                <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Category</label>
                 <select
                   value={form.categoryId}
                   onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
@@ -152,9 +147,7 @@ export default function BudgetsPage() {
               </div>
 
               <div>
-                <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">
-                  Monthly limit (₦)
-                </label>
+                <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Monthly limit (₦)</label>
                 <input
                   type="number"
                   value={form.amount}
@@ -193,7 +186,6 @@ export default function BudgetsPage() {
         </div>
       )}
 
-      {/* Budget list */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <p className="text-white/20 text-sm">Loading...</p>
@@ -201,10 +193,7 @@ export default function BudgetsPage() {
       ) : budgetStatuses.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-60 border border-dashed border-white/10 rounded-xl">
           <p className="text-white/20 text-sm">No budgets set</p>
-          <button
-            onClick={openCreate}
-            className="text-emerald-400 text-sm mt-2 hover:text-emerald-300"
-          >
+          <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">
             Set your first budget
           </button>
         </div>
@@ -213,39 +202,30 @@ export default function BudgetsPage() {
           {budgetStatuses.map((bs) => {
             const { budget, spent, remaining, percentage, status } = bs
             return (
-              <div
-                key={budget.id}
-                className="bg-[#0a0d12] border border-white/5 rounded-xl p-5 group"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+              <div key={budget.id} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5 group">
+                <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium"
-                      style={{
-                        backgroundColor: `${budget.category?.color}20`,
-                        color: budget.category?.color,
-                      }}
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium flex-shrink-0"
+                      style={{ backgroundColor: `${budget.category?.color}20`, color: budget.category?.color }}
                     >
                       {budget.category?.name[0].toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-white/80 text-sm font-medium">{budget.category?.name}</p>
+                    <div className="min-w-0">
+                      <p className="text-white/80 text-sm font-medium truncate">{budget.category?.name}</p>
                       <p className="text-white/30 text-xs">Monthly budget</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-white/70 text-sm">
-                        {formatNaira(spent)}{' '}
-                        <span className="text-white/30">/ {formatNaira(Number(budget.amount))}</span>
+                      <p className="text-white/70 text-sm whitespace-nowrap">
+                        {formatNaira(spent)} <span className="text-white/30">/ {formatNaira(Number(budget.amount))}</span>
                       </p>
                       <p className="text-xs" style={{ color: statusColor(status) }}>
-                        {status === 'over'
-                          ? `${formatNaira(Math.abs(remaining))} over`
-                          : `${formatNaira(remaining)} left`}
+                        {status === 'over' ? `${formatNaira(Math.abs(remaining))} over` : `${formatNaira(remaining)} left`}
                       </p>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEdit(bs)}
                         className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
@@ -265,10 +245,7 @@ export default function BudgetsPage() {
                 <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(percentage, 100)}%`,
-                      backgroundColor: statusColor(status),
-                    }}
+                    style={{ width: `${Math.min(percentage, 100)}%`, backgroundColor: statusColor(status) }}
                   />
                 </div>
                 <div className="flex justify-between mt-1.5">

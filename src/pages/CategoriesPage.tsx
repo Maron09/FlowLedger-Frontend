@@ -203,7 +203,7 @@ export default function CategoriesPage() {
                   <p className="text-white/30 text-xs capitalize">{cat.type.toLowerCase()}</p>
                 </div>
               </div>
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => openEdit(cat)}
                   className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
