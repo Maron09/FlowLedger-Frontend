@@ -41,7 +41,7 @@ const TOOLTIP_STYLE = {
 export default function AnalyticsPage() {
   const months = getLast6Months()
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1].value)
-  const { overview, categories, trend, loading } = useAnalytics(selectedMonth)
+  const { overview, categories, trend } = useAnalytics(selectedMonth)
 
   return (
     <div className="p-4 md:p-8 space-y-6">
@@ -83,7 +83,8 @@ export default function AnalyticsPage() {
             <BarChart data={trend} barGap={4}>
               <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false}/>
               <YAxis hide/>
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: number) => formatNaira(value)} labelFormatter={formatMonth}/>
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))}
+labelFormatter={(label: any) => formatMonth(String(label))}/>
               <Legend wrapperStyle={{ fontSize: '11px', color: '#ffffff50' }}/>
               <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} opacity={0.8}/>
               <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.8}/>
@@ -102,7 +103,8 @@ export default function AnalyticsPage() {
                       <Cell key={index} fill={entry.category?.color ?? '#6366f1'}/>
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: number) => formatNaira(value)}/>
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))}
+labelFormatter={(label: any) => formatMonth(String(label))}/>
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex-1 space-y-2.5 py-2">

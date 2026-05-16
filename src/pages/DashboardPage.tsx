@@ -59,7 +59,7 @@ export default function DashboardPage() {
           label="Balance"
           value={formatNaira(overview?.balance ?? 0)}
           sub={overview && overview.balance >= 0 ? 'Positive' : 'Negative'}
-          positive={overview && overview.balance >= 0}
+          positive={!!(overview && overview.balance >= 0)}
         />
         <SummaryCard
           label="Total Income"
@@ -76,7 +76,7 @@ export default function DashboardPage() {
           label="Savings Rate"
           value={`${overview?.savingsRate.toFixed(1) ?? 0}%`}
           sub="Of income saved"
-          positive={overview && overview.savingsRate > 20}
+          positive={!!(overview && overview.savingsRate > 20)}
         />
       </div>
 
@@ -100,8 +100,8 @@ export default function DashboardPage() {
               <YAxis hide/>
               <Tooltip
                 contentStyle={{ backgroundColor: '#0a0d12', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', fontSize: '12px', color: '#fff' }}
-                formatter={(value: number) => formatNaira(value)}
-                labelFormatter={formatMonth}
+                formatter={(value: any) => formatNaira(Number(value))}
+labelFormatter={(label: any) => formatMonth(String(label))}
               />
               <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" name="Income"/>
               <Area type="monotone" dataKey="expenses" stroke="#f87171" strokeWidth={2} fill="url(#expenseGrad)" name="Expenses"/>
