@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../../lib/axios'
+import { useWorkspaceStore } from '../../store/workspace.store'
 
 interface Category {
   id: string
@@ -44,6 +45,8 @@ export default function AddTransactionModal({ onClose, onSuccess, transaction }:
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const { activeWorkspace } = useWorkspaceStore()
 
   useEffect(() => {
     if (workspaceId) {
