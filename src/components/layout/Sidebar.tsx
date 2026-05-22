@@ -68,7 +68,7 @@ export default function Sidebar({ open, onClose }: Props) {
         fixed top-0 left-0 h-full z-40 w-60
         bg-[#0a0d12] border-r border-white/5
         flex flex-col transition-transform duration-300
-        lg:relative lg:translate-x-0 lg:z-auto
+        lg:relative lg:min-h-screen lg:translate-x-0 lg:z-auto
         ${open ? 'translate-x-0' : '-translate-x-full'}
       `}>
 
