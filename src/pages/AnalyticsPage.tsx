@@ -1,16 +1,14 @@
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useAnalytics } from '../hooks/useAnalytics'
+import { useWorkspaceStore } from '../store/workspace.store'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
 
 function formatNaira(amount: number) {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  }).format(amount)
+  return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
 }
 
 function formatMonth(monthStr: string) {
@@ -39,9 +37,18 @@ const TOOLTIP_STYLE = {
 }
 
 export default function AnalyticsPage() {
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { activeWorkspace } = useWorkspaceStore()
+  const isBusiness = activeWorkspace?.type === 'BUSINESS'
   const months = getLast6Months()
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1].value)
-  const { overview, categories, trend } = useAnalytics(selectedMonth)
+  const { overview, categories, trend } = useAnalytics(workspaceId!, selectedMonth)
+
+  const summaryCards = [
+    { label: isBusiness ? 'Total Revenue' : 'Income', value: overview?.totalIncome ?? 0, color: '#10b981' },
+    { label: isBusiness ? 'Operating Expenses' : 'Expenses', value: overview?.totalExpenses ?? 0, color: '#ef4444' },
+    { label: isBusiness ? 'Net Profit' : 'Balance', value: overview?.balance ?? 0, color: '#3b82f6' },
+  ]
 
   return (
     <div className="p-4 md:p-8 space-y-6">
@@ -50,11 +57,7 @@ export default function AnalyticsPage() {
           <h1 className="text-white text-xl font-semibold">Analytics</h1>
           <p className="text-white/30 text-sm mt-0.5">Your financial picture</p>
         </div>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="bg-[#0a0d12] border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-500/50"
-        >
+        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="bg-[#0a0d12] border border-white/10 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-emerald-500/50">
           {months.map((m) => (
             <option key={m.value} value={m.value} style={{ backgroundColor: '#0a0d12' }}>{m.label}</option>
           ))}
@@ -62,16 +65,10 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: 'Income', value: overview?.totalIncome ?? 0, color: '#10b981' },
-          { label: 'Expenses', value: overview?.totalExpenses ?? 0, color: '#ef4444' },
-          { label: 'Balance', value: overview?.balance ?? 0, color: '#3b82f6' },
-        ].map((item) => (
+        {summaryCards.map((item) => (
           <div key={item.label} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5">
             <p className="text-white/40 text-xs uppercase tracking-wider mb-2">{item.label}</p>
-            <p className="text-xl font-semibold" style={{ color: item.color }}>
-              {formatNaira(item.value)}
-            </p>
+            <p className="text-xl font-semibold" style={{ color: item.color }}>{formatNaira(item.value)}</p>
           </div>
         ))}
       </div>
@@ -83,11 +80,10 @@ export default function AnalyticsPage() {
             <BarChart data={trend} barGap={4}>
               <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: '#ffffff40', fontSize: 11 }} axisLine={false} tickLine={false}/>
               <YAxis hide/>
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))}
-labelFormatter={(label: any) => formatMonth(String(label))}/>
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))} labelFormatter={(label: any) => formatMonth(String(label))}/>
               <Legend wrapperStyle={{ fontSize: '11px', color: '#ffffff50' }}/>
-              <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} opacity={0.8}/>
-              <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.8}/>
+              <Bar dataKey="income" name={isBusiness ? 'Revenue' : 'Income'} fill="#10b981" radius={[4, 4, 0, 0]} opacity={0.8}/>
+              <Bar dataKey="expenses" name={isBusiness ? 'Operating Expenses' : 'Expenses'} fill="#ef4444" radius={[4, 4, 0, 0]} opacity={0.8}/>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -103,8 +99,7 @@ labelFormatter={(label: any) => formatMonth(String(label))}/>
                       <Cell key={index} fill={entry.category?.color ?? '#6366f1'}/>
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))}
-labelFormatter={(label: any) => formatMonth(String(label))}/>
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: any) => formatNaira(Number(value))}/>
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex-1 space-y-2.5 py-2">
@@ -113,15 +108,12 @@ labelFormatter={(label: any) => formatMonth(String(label))}/>
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.category?.color ?? '#6366f1' }}/>
-                        <span className="text-white/50 text-xs truncate max-w-[80px]">{item.category?.name}</span>
+                        <span className="text-white/50 text-xs truncate max-w-20">{item.category?.name}</span>
                       </div>
                       <span className="text-white/50 text-xs">{item.percentage.toFixed(0)}%</span>
                     </div>
                     <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${item.percentage}%`, backgroundColor: item.category?.color ?? '#6366f1' }}
-                      />
+                      <div className="h-full rounded-full" style={{ width: `${item.percentage}%`, backgroundColor: item.category?.color ?? '#6366f1' }}/>
                     </div>
                   </div>
                 ))}
@@ -137,23 +129,15 @@ labelFormatter={(label: any) => formatMonth(String(label))}/>
 
       <div className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-white/60 text-xs uppercase tracking-wider">Savings rate</p>
+          <p className="text-white/60 text-xs uppercase tracking-wider">{isBusiness ? 'Profit margin' : 'Savings rate'}</p>
           <p className="text-white font-semibold">{overview?.savingsRate.toFixed(1) ?? 0}%</p>
         </div>
         <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${Math.min(overview?.savingsRate ?? 0, 100)}%`,
-              backgroundColor: (overview?.savingsRate ?? 0) > 20 ? '#10b981' : '#f59e0b',
-            }}
-          />
+          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(overview?.savingsRate ?? 0, 100)}%`, backgroundColor: (overview?.savingsRate ?? 0) > 20 ? '#10b981' : '#f59e0b' }}/>
         </div>
         <div className="flex justify-between mt-1.5">
           <span className="text-white/20 text-xs">0%</span>
-          <span className="text-white/20 text-xs">
-            {(overview?.savingsRate ?? 0) > 20 ? '✓ Healthy savings rate' : 'Aim for 20%+'}
-          </span>
+          <span className="text-white/20 text-xs">{(overview?.savingsRate ?? 0) > 20 ? `✓ Healthy ${isBusiness ? 'profit margin' : 'savings rate'}` : 'Aim for 20%+'}</span>
           <span className="text-white/20 text-xs">100%</span>
         </div>
       </div>

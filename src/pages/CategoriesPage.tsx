@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import api from '../lib/axios'
 
 interface Category {
@@ -16,6 +17,7 @@ const PRESET_COLORS = [
 ]
 
 export default function CategoriesPage() {
+  const { workspaceId } = useParams<{ workspaceId: string }>()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -25,10 +27,10 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false)
 
   const fetchCategories = () => {
-    api.get('/categories').then(({ data }) => setCategories(data)).finally(() => setLoading(false))
+    api.get(`/w/${workspaceId}/categories`).then(({ data }) => setCategories(data)).finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => { if (workspaceId) fetchCategories() }, [workspaceId])
 
   const openCreate = () => {
     setEditId(null)
@@ -50,9 +52,9 @@ export default function CategoriesPage() {
     setError('')
     try {
       if (editId) {
-        await api.patch(`/categories/${editId}`, form)
+        await api.patch(`/w/${workspaceId}/categories/${editId}`, form)
       } else {
-        await api.post('/categories', form)
+        await api.post(`/w/${workspaceId}/categories`, form)
       }
       setShowForm(false)
       fetchCategories()
@@ -67,7 +69,7 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this category?')) return
     try {
-      await api.delete(`/categories/${id}`)
+      await api.delete(`/w/${workspaceId}/categories/${id}`)
       fetchCategories()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Cannot delete category')
@@ -81,10 +83,7 @@ export default function CategoriesPage() {
           <h1 className="text-white text-xl font-semibold">Categories</h1>
           <p className="text-white/30 text-sm mt-0.5">{categories.length} categories</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
+        <button onClick={openCreate} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
           <span>+</span> New Category
         </button>
       </div>
@@ -96,80 +95,32 @@ export default function CategoriesPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Food & Dining"
-                  required
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/20 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"
-                />
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Food & Dining" required className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/20 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"/>
               </div>
-
               <div>
                 <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Type</label>
-                <select
-                  value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-all"
-                >
+                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-all">
                   <option value="EXPENSE">Expense</option>
                   <option value="INCOME">Income</option>
                   <option value="BOTH">Both</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Color</label>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setForm({ ...form, color })}
-                      className="w-7 h-7 rounded-full transition-transform hover:scale-110"
-                      style={{
-                        backgroundColor: color,
-                        outline: form.color === color ? `2px solid ${color}` : 'none',
-                        outlineOffset: '2px',
-                      }}
-                    />
+                    <button key={color} type="button" onClick={() => setForm({ ...form, color })} className="w-7 h-7 rounded-full transition-transform hover:scale-110" style={{ backgroundColor: color, outline: form.color === color ? `2px solid ${color}` : 'none', outlineOffset: '2px' }}/>
                   ))}
                 </div>
               </div>
-
               <div>
                 <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Icon label</label>
-                <input
-                  type="text"
-                  value={form.icon}
-                  onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                  placeholder="e.g. wallet"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/20 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"
-                />
+                <input type="text" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="e.g. wallet" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/20 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"/>
               </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
-                  {error}
-                </div>
-              )}
-
+              {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">{error}</div>}
               <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 bg-white/5 hover:bg-white/10 text-white/50 text-sm py-2.5 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
-                >
-                  {saving ? 'Saving...' : editId ? 'Update' : 'Create'}
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white/50 text-sm py-2.5 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" disabled={saving} className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
               </div>
             </form>
           </div>
@@ -177,25 +128,18 @@ export default function CategoriesPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <p className="text-white/20 text-sm">Loading...</p>
-        </div>
+        <div className="flex items-center justify-center h-40"><p className="text-white/20 text-sm">Loading...</p></div>
       ) : categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-60 border border-dashed border-white/10 rounded-xl">
           <p className="text-white/20 text-sm">No categories yet</p>
-          <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">
-            Create your first category
-          </button>
+          <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">Create your first category</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {categories.map((cat) => (
             <div key={cat.id} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium"
-                  style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>
                   {cat.name[0].toUpperCase()}
                 </div>
                 <div>
@@ -204,18 +148,8 @@ export default function CategoriesPage() {
                 </div>
               </div>
               <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => openEdit(cat)}
-                  className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(cat.id)}
-                  className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-red-500/5 transition-colors"
-                >
-                  Delete
-                </button>
+                <button onClick={() => openEdit(cat)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">Edit</button>
+                <button onClick={() => handleDelete(cat.id)} className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-red-500/5 transition-colors">Delete</button>
               </div>
             </div>
           ))}

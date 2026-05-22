@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useTransactions } from '../hooks/useTransactions'
 import AddTransactionModal from '../components/ui/AddTransactionModal'
 import api from '../lib/axios'
@@ -12,7 +13,8 @@ function formatNaira(amount: number) {
 }
 
 export default function TransactionsPage() {
-  const { expenses, income, meta, loading, page, setPage, search, setSearch } = useTransactions()
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { expenses, income, meta, loading, page, setPage, search, setSearch } = useTransactions(workspaceId!)
   const [editTransaction, setEditTransaction] = useState<any>(null)
 
   const all = [...expenses, ...income].sort(
@@ -21,7 +23,7 @@ export default function TransactionsPage() {
 
   const handleDelete = async (id: string, type: 'expense' | 'income') => {
     if (!confirm('Delete this transaction?')) return
-    await api.delete(`/${type === 'expense' ? 'expenses' : 'income'}/${id}`)
+    await api.delete(`/w/${workspaceId}/${type === 'expense' ? 'expenses' : 'income'}/${id}`)
     window.location.reload()
   }
 
@@ -34,7 +36,6 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-white/20" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="8"/>
@@ -59,31 +60,19 @@ export default function TransactionsPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-white/20 text-sm">Loading...</p>
-          </div>
+          <div className="flex items-center justify-center h-40"><p className="text-white/20 text-sm">Loading...</p></div>
         ) : all.length === 0 ? (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-white/20 text-sm">No transactions found</p>
-          </div>
+          <div className="flex items-center justify-center h-40"><p className="text-white/20 text-sm">No transactions found</p></div>
         ) : (
           all.map((tx) => (
-            <div
-              key={`${tx.type}-${tx.id}`}
-              className="flex items-center px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/2 transition-colors group"
-            >
+            <div key={`${tx.type}-${tx.id}`} className="flex items-center px-5 py-3.5 border-b border-white/5 last:border-0 hover:bg-white/2 transition-colors group">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-medium"
-                  style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}20`, color: tx.category?.color ?? '#6366f1' }}
-                >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-medium" style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}20`, color: tx.category?.color ?? '#6366f1' }}>
                   {tx.title[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <p className="text-white/80 text-sm truncate">{tx.title}</p>
-                  <p className="text-white/30 text-xs capitalize">
-                    {tx.paymentMethod?.toLowerCase().replace('_', ' ') ?? (tx as any).source ?? '—'}
-                  </p>
+                  <p className="text-white/30 text-xs capitalize">{tx.paymentMethod?.toLowerCase().replace('_', ' ') ?? (tx as any).source ?? '—'}</p>
                 </div>
               </div>
               <div className="w-36">
@@ -92,9 +81,7 @@ export default function TransactionsPage() {
                 </span>
               </div>
               <div className="w-36">
-                <span className="text-white/30 text-sm">
-                  {new Date(tx.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>
+                <span className="text-white/30 text-sm">{new Date(tx.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </div>
               <div className="w-32 flex items-center gap-2 justify-end">
                 <span className={`text-sm font-medium ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -113,29 +100,20 @@ export default function TransactionsPage() {
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
         {loading ? (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-white/20 text-sm">Loading...</p>
-          </div>
+          <div className="flex items-center justify-center h-40"><p className="text-white/20 text-sm">Loading...</p></div>
         ) : all.length === 0 ? (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-white/20 text-sm">No transactions found</p>
-          </div>
+          <div className="flex items-center justify-center h-40"><p className="text-white/20 text-sm">No transactions found</p></div>
         ) : (
           all.map((tx) => (
             <div key={`${tx.type}-${tx.id}`} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-medium"
-                    style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}20`, color: tx.category?.color ?? '#6366f1' }}
-                  >
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-medium" style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}20`, color: tx.category?.color ?? '#6366f1' }}>
                     {tx.title[0].toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <p className="text-white/80 text-sm font-medium truncate">{tx.title}</p>
-                    <p className="text-white/30 text-xs capitalize">
-                      {tx.paymentMethod?.toLowerCase().replace('_', ' ') ?? (tx as any).source ?? '—'}
-                    </p>
+                    <p className="text-white/30 text-xs capitalize">{tx.paymentMethod?.toLowerCase().replace('_', ' ') ?? (tx as any).source ?? '—'}</p>
                   </div>
                 </div>
                 <span className={`text-sm font-semibold flex-shrink-0 ml-2 ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -147,9 +125,7 @@ export default function TransactionsPage() {
                   <span className="text-xs px-2 py-0.5 rounded-md" style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}15`, color: tx.category?.color ?? '#6366f1' }}>
                     {tx.category?.name ?? 'Uncategorized'}
                   </span>
-                  <span className="text-white/20 text-xs">
-                    {new Date(tx.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
-                  </span>
+                  <span className="text-white/20 text-xs">{new Date(tx.date).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}</span>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setEditTransaction(tx)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Edit</button>
@@ -161,7 +137,6 @@ export default function TransactionsPage() {
         )}
       </div>
 
-      {/* Pagination */}
       {meta && meta.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-white/30 text-sm">Page {page} of {meta.totalPages}</p>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import api from '../lib/axios'
+import api, { workspaceUrl } from '../lib/axios'
 
 interface Overview {
   totalIncome: number
@@ -20,25 +20,26 @@ interface MonthlyTrend {
   expenses: number
 }
 
-export function useAnalytics(month?: string) {
+export function useAnalytics(workspaceId: string, month?: string) {
   const [overview, setOverview] = useState<Overview | null>(null)
   const [categories, setCategories] = useState<CategoryBreakdown[]>([])
   const [trend, setTrend] = useState<MonthlyTrend[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!workspaceId) return
     const params = month ? `?month=${month}` : ''
 
     Promise.all([
-      api.get(`/analytics/overview${params}`),
-      api.get(`/analytics/categories${params}`),
-      api.get('/analytics/trend?months=6'),
+      api.get(workspaceUrl(workspaceId, `/analytics/overview${params}`)),
+      api.get(workspaceUrl(workspaceId, `/analytics/categories${params}`)),
+      api.get(workspaceUrl(workspaceId, '/analytics/trend?months=6')),
     ]).then(([overviewRes, categoriesRes, trendRes]) => {
       setOverview(overviewRes.data)
       setCategories(categoriesRes.data)
       setTrend(trendRes.data)
     }).finally(() => setLoading(false))
-  }, [month])
+  }, [workspaceId, month])
 
   return { overview, categories, trend, loading }
 }

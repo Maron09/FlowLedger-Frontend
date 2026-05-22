@@ -4,6 +4,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
+import { useParams } from 'react-router-dom'
+import { useWorkspaceStore } from '../store/workspace.store'
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -16,6 +18,26 @@ function formatNaira(amount: number) {
 function formatMonth(monthStr: string) {
   const [year, month] = monthStr.split('-')
   return new Date(Number(year), Number(month) - 1).toLocaleString('default', { month: 'short' })
+}
+
+// Workspace-aware labels
+const LABELS = {
+  PERSONAL: {
+    income: 'Total Income',
+    expenses: 'Total Expenses',
+    balance: 'Balance',
+    savingsRate: 'Savings Rate',
+    savingsSub: 'Of income saved',
+    chart: 'Income vs Expenses',
+  },
+  BUSINESS: {
+    income: 'Total Revenue',
+    expenses: 'Operating Expenses',
+    balance: 'Net Profit',
+    savingsRate: 'Profit Margin',
+    savingsSub: 'Of revenue retained',
+    chart: 'Revenue vs Expenses',
+  },
 }
 
 function SummaryCard({ label, value, sub, positive }: {
@@ -33,8 +55,12 @@ function SummaryCard({ label, value, sub, positive }: {
 }
 
 export default function DashboardPage() {
-  const { overview, categories, trend, loading } = useAnalytics()
-  const { expenses } = useRecentExpenses()
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { activeWorkspace } = useWorkspaceStore()
+  const { overview, categories, trend, loading } = useAnalytics(workspaceId!)
+  const { expenses } = useRecentExpenses(workspaceId!)
+
+  const labels = LABELS[activeWorkspace?.type ?? 'PERSONAL']
 
   if (loading) {
     return (
@@ -46,36 +72,45 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-white text-xl font-semibold">Dashboard</h1>
-        <p className="text-white/30 text-sm mt-0.5">
-          {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-white text-xl font-semibold">
+            {activeWorkspace?.name ?? 'Dashboard'}
+          </h1>
+          <p className="text-white/30 text-sm mt-0.5">
+            {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        {activeWorkspace?.type === 'BUSINESS' && (
+          <span className="text-xs bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-md">
+            Business
+          </span>
+        )}
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <SummaryCard
-          label="Balance"
+          label={labels.balance}
           value={formatNaira(overview?.balance ?? 0)}
           sub={overview && overview.balance >= 0 ? 'Positive' : 'Negative'}
           positive={!!(overview && overview.balance >= 0)}
         />
         <SummaryCard
-          label="Total Income"
+          label={labels.income}
           value={formatNaira(overview?.totalIncome ?? 0)}
           sub="This month"
           positive
         />
         <SummaryCard
-          label="Total Expenses"
+          label={labels.expenses}
           value={formatNaira(overview?.totalExpenses ?? 0)}
           sub="This month"
         />
         <SummaryCard
-          label="Savings Rate"
+          label={labels.savingsRate}
           value={`${overview?.savingsRate.toFixed(1) ?? 0}%`}
-          sub="Of income saved"
+          sub={labels.savingsSub}
           positive={!!(overview && overview.savingsRate > 20)}
         />
       </div>
@@ -83,7 +118,7 @@ export default function DashboardPage() {
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5">
-          <p className="text-white/60 text-xs uppercase tracking-wider mb-4">Income vs Expenses</p>
+          <p className="text-white/60 text-xs uppercase tracking-wider mb-4">{labels.chart}</p>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={trend}>
               <defs>
@@ -101,10 +136,10 @@ export default function DashboardPage() {
               <Tooltip
                 contentStyle={{ backgroundColor: '#0a0d12', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', fontSize: '12px', color: '#fff' }}
                 formatter={(value: any) => formatNaira(Number(value))}
-labelFormatter={(label: any) => formatMonth(String(label))}
+                labelFormatter={(label: any) => formatMonth(String(label))}
               />
-              <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" name="Income"/>
-              <Area type="monotone" dataKey="expenses" stroke="#f87171" strokeWidth={2} fill="url(#expenseGrad)" name="Expenses"/>
+              <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" name={labels.income}/>
+              <Area type="monotone" dataKey="expenses" stroke="#f87171" strokeWidth={2} fill="url(#expenseGrad)" name={labels.expenses}/>
             </AreaChart>
           </ResponsiveContainer>
         </div>

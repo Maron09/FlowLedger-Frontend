@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import api from '../lib/axios'
+import api, { workspaceUrl } from '../lib/axios'
 
 interface Transaction {
   id: string
@@ -19,7 +19,7 @@ interface Meta {
   totalPages: number
 }
 
-export function useTransactions() {
+export function useTransactions(workspaceId: string) {
   const [expenses, setExpenses] = useState<Transaction[]>([])
   const [income, setIncome] = useState<Transaction[]>([])
   const [meta, setMeta] = useState<Meta | null>(null)
@@ -28,6 +28,7 @@ export function useTransactions() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
+    if (!workspaceId) return
     setLoading(true)
     const params = new URLSearchParams({
       page: String(page),
@@ -36,14 +37,14 @@ export function useTransactions() {
     })
 
     Promise.all([
-      api.get(`/expenses?${params}`),
-      api.get(`/income?${params}`),
+      api.get(workspaceUrl(workspaceId, `/expenses?${params}`)),
+      api.get(workspaceUrl(workspaceId, `/income?${params}`)),
     ]).then(([expRes, incRes]) => {
       setExpenses(expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })))
       setIncome(incRes.data.items.map((i: any) => ({ ...i, type: 'income' })))
       setMeta(expRes.data.meta)
     }).finally(() => setLoading(false))
-  }, [page, search])
+  }, [workspaceId, page, search])
 
   return { expenses, income, meta, loading, page, setPage, search, setSearch }
 }

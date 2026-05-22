@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
+import { useWorkspaceStore } from './store/workspace.store'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AppLayout from './components/layout/AppLayout'
@@ -14,8 +15,15 @@ import FeedbackPage from './pages/FeedbackPage'
 import AdminPage from './pages/AdminPage'
 import api from './lib/axios'
 
+function WorkspaceRedirect() {
+  const { activeWorkspace } = useWorkspaceStore()
+  if (!activeWorkspace) return <div className="min-h-screen bg-[#0f1117]" />
+  return <Navigate to={`/w/${activeWorkspace.id}/dashboard`} replace />
+}
+
 export default function App() {
   const { isAuthenticated, token, setAuth, user } = useAuthStore()
+  const { setWorkspaces, setActiveWorkspace, activeWorkspace } = useWorkspaceStore()
   const isAdmin = (user as any)?.role === 'ADMIN'
 
   useEffect(() => {
@@ -26,27 +34,54 @@ export default function App() {
     }
   }, [token])
 
+  useEffect(() => {
+    if (isAuthenticated && user && !isAdmin) {
+      api.get('/workspaces').then(({ data }) => {
+        setWorkspaces(data)
+        const savedId = localStorage.getItem('activeWorkspaceId')
+        const saved = data.find((w: any) => w.id === savedId)
+        const active = saved ?? data[0]
+        if (active) setActiveWorkspace(active)
+      })
+    }
+  }, [isAuthenticated, user])
+
   return (
     <Routes>
-      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={isAdmin ? '/admin' : '/dashboard'} />} />
-      <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+      <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
 
-      {/* Regular user routes */}
-      <Route element={isAuthenticated && !isAdmin ? <AppLayout /> : <Navigate to={isAuthenticated ? '/admin' : '/login'} />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/transactions" element={<TransactionsPage />} />
-        <Route path="/categories" element={<CategoriesPage />} />
-        <Route path="/budgets" element={<BudgetsPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/feedback" element={<FeedbackPage />} />
+      {/* Workspace routes */}
+      <Route
+        path="/w/:workspaceId/*"
+        element={isAuthenticated && !isAdmin ? <AppLayout /> : <Navigate to={isAuthenticated ? '/admin' : '/login'} />}
+      >
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="transactions" element={<TransactionsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="budgets" element={<BudgetsPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="feedback" element={<FeedbackPage />} />
       </Route>
 
       {/* Admin routes */}
-      <Route element={isAuthenticated && isAdmin ? <AdminLayout /> : <Navigate to={isAuthenticated ? '/dashboard' : '/login'} />}>
+      <Route
+        element={isAuthenticated && isAdmin ? <AdminLayout /> : <Navigate to={isAuthenticated ? '/' : '/login'} />}
+      >
         <Route path="/admin" element={<AdminPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={isAuthenticated ? (isAdmin ? '/admin' : '/dashboard') : '/login'} />} />
+      {/* Root redirect */}
+      <Route
+        path="/"
+        element={
+          !isAuthenticated ? <Navigate to="/login" /> :
+          isAdmin ? <Navigate to="/admin" /> :
+          <WorkspaceRedirect />
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
 }
