@@ -71,7 +71,19 @@ export default function Sidebar({ open, onClose }: Props) {
         lg:relative lg:min-h-screen lg:translate-x-0 lg:z-auto
         ${open ? 'translate-x-0' : '-translate-x-full'}
       `}>
-
+        {/* Logo */}
+        <div className="px-6 py-4 border-b border-white/5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span className="text-white font-semibold tracking-tight">FlowLedger</span>
+          </div>
+        </div>
         {/* Workspace switcher */}
         <div className="p-3 border-b border-white/5">
           <button
