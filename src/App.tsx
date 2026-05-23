@@ -30,12 +30,21 @@ export default function App() {
   const isAdmin = (user as any)?.role === 'ADMIN'
 
   useEffect(() => {
-    if (token && !user) {
-      api.get('/auth/me').then(({ data }) => {
-        setAuth(data, token)
-      }).catch(() => {})
-    }
-  }, [token])
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (refreshToken && !user) {
+    api.post('/auth/refresh', { refreshToken })
+      .then(({ data }) => {
+        api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${data.accessToken}` }
+        }).then(({ data: userData }) => {
+          setAuth(userData, data.accessToken, data.refreshToken)
+        })
+      })
+      .catch(() => {
+        localStorage.removeItem('refreshToken')
+      })
+  }
+}, [])
 
   useEffect(() => {
     if (isAuthenticated && user && !isAdmin) {

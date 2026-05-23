@@ -17,12 +17,12 @@ export default function LoginPage() {
 
     try {
       const { data } = await api.post('/auth/login', form)
-      setAuth(data.user, data.accessToken)
+      setAuth(data.user, data.accessToken, data.refreshToken)
       // Redirect based on role
       if (data.user.role === 'ADMIN') {
         navigate('/admin')
       } else {
-        navigate('/dashboard')
+        navigate('/')
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed')

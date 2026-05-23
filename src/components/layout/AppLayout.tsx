@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import AddTransactionModal from '../ui/AddTransactionModal'
+import SessionWarning from '../ui/SessionWarning'
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -62,6 +63,7 @@ export default function AppLayout() {
           onSuccess={() => navigate(0)}
         />
       )}
+      <SessionWarning />
     </div>
   )
 }
