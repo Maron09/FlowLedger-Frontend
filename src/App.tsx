@@ -25,7 +25,7 @@ function WorkspaceRedirect() {
 }
 
 export default function App() {
-  const { isAuthenticated, token, setAuth, user } = useAuthStore()
+  const { isAuthenticated, setAuth, user } = useAuthStore()
   const { setWorkspaces, setActiveWorkspace } = useWorkspaceStore()
   const isAdmin = (user as any)?.role === 'ADMIN'
 
