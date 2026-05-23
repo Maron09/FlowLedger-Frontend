@@ -14,6 +14,9 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import FeedbackPage from './pages/FeedbackPage'
 import AdminPage from './pages/AdminPage'
 import api from './lib/axios'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+
 
 function WorkspaceRedirect() {
   const { activeWorkspace } = useWorkspaceStore()
@@ -50,6 +53,8 @@ export default function App() {
     <Routes>
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Workspace routes */}
       <Route
