@@ -1,11 +1,12 @@
+import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { useRecentExpenses } from '../hooks/useExpenses'
+import { useWorkspaceStore } from '../store/workspace.store'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
-import { useParams } from 'react-router-dom'
-import { useWorkspaceStore } from '../store/workspace.store'
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -20,7 +21,6 @@ function formatMonth(monthStr: string) {
   return new Date(Number(year), Number(month) - 1).toLocaleString('default', { month: 'short' })
 }
 
-// Workspace-aware labels
 const LABELS = {
   PERSONAL: {
     income: 'Total Income',
@@ -56,9 +56,19 @@ function SummaryCard({ label, value, sub, positive }: {
 
 export default function DashboardPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
-  const { activeWorkspace } = useWorkspaceStore()
+  const { activeWorkspace, workspaces, setActiveWorkspace } = useWorkspaceStore()
   const { overview, categories, trend, loading } = useAnalytics(workspaceId!)
   const { expenses } = useRecentExpenses(workspaceId!)
+
+  // Sync active workspace from URL
+  useEffect(() => {
+    if (workspaceId && workspaces.length > 0) {
+      const ws = workspaces.find((w) => w.id === workspaceId)
+      if (ws && ws.id !== activeWorkspace?.id) {
+        setActiveWorkspace(ws)
+      }
+    }
+  }, [workspaceId, workspaces])
 
   const labels = LABELS[activeWorkspace?.type ?? 'PERSONAL']
 

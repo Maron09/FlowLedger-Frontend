@@ -1,13 +1,26 @@
-import { useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import AddTransactionModal from '../ui/AddTransactionModal'
 import SessionWarning from '../ui/SessionWarning'
+import { useWorkspaceStore } from '../../store/workspace.store'
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const navigate = useNavigate()
+  const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspaceStore()
+
+  // Sync active workspace from URL param
+  useEffect(() => {
+    if (workspaceId && workspaces.length > 0) {
+      const ws = workspaces.find((w) => w.id === workspaceId)
+      if (ws && ws.id !== activeWorkspace?.id) {
+        setActiveWorkspace(ws)
+      }
+    }
+  }, [workspaceId, workspaces])
 
   return (
     <div className="flex min-h-screen bg-[#0f1117]">
