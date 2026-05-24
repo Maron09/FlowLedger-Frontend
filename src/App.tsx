@@ -13,10 +13,9 @@ import BudgetsPage from './pages/BudgetPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import FeedbackPage from './pages/FeedbackPage'
 import AdminPage from './pages/AdminPage'
-import api from './lib/axios'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
-
+import api from './lib/axios'
 
 function WorkspaceRedirect() {
   const { activeWorkspace } = useWorkspaceStore()
@@ -29,30 +28,36 @@ export default function App() {
   const { setWorkspaces, setActiveWorkspace } = useWorkspaceStore()
   const isAdmin = (user as any)?.role === 'ADMIN'
 
+  // Silent refresh on page load
   useEffect(() => {
-  const refreshToken = localStorage.getItem('refreshToken')
-  if (refreshToken && !user) {
-    api.post('/auth/refresh', { refreshToken })
-      .then(({ data }) => {
-        api.get('/auth/me', {
-          headers: { Authorization: `Bearer ${data.accessToken}` }
-        }).then(({ data: userData }) => {
-          setAuth(userData, data.accessToken, data.refreshToken)
+    const refreshToken = localStorage.getItem('refreshToken')
+    if (refreshToken && !user) {
+      api.post('/auth/refresh', { refreshToken })
+        .then(({ data }) => {
+          api.get('/auth/me', {
+            headers: { Authorization: `Bearer ${data.accessToken}` },
+          }).then(({ data: userData }) => {
+            setAuth(userData, data.accessToken, data.refreshToken)
+          })
         })
-      })
-      .catch(() => {
-        localStorage.removeItem('refreshToken')
-      })
-  }
-}, [])
+        .catch(() => {
+          localStorage.removeItem('refreshToken')
+        })
+    }
+  }, [])
 
+  // Load workspaces and restore last active workspace
   useEffect(() => {
     if (isAuthenticated && user && !isAdmin) {
-      api.get('/workspaces').then(({ data }) => {
-        setWorkspaces(data)
-        const savedId = localStorage.getItem('activeWorkspaceId')
-        const saved = data.find((w: any) => w.id === savedId)
-        const active = saved ?? data[0]
+      api.get('/workspaces').then(({ data: workspaces }) => {
+        setWorkspaces(workspaces)
+
+        // Priority: lastWorkspaceId from user profile → localStorage → first workspace
+        const lastWorkspaceId = (user as any).lastWorkspaceId
+        const savedId = lastWorkspaceId ?? localStorage.getItem('activeWorkspaceId')
+        const saved = workspaces.find((w: any) => w.id === savedId)
+        const active = saved ?? workspaces[0]
+
         if (active) setActiveWorkspace(active)
       })
     }
@@ -65,7 +70,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* Workspace routes */}
+      {/* Regular user workspace routes */}
       <Route
         path="/w/:workspaceId/*"
         element={isAuthenticated && !isAdmin ? <AppLayout /> : <Navigate to={isAuthenticated ? '/admin' : '/login'} />}
