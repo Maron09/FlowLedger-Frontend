@@ -16,6 +16,7 @@ import AdminPage from './pages/AdminPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SettingsPage from './pages/SettingsPage'
+import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="budgets" element={<BudgetsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="workspace-settings" element={<WorkspaceSettingsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
       </Route>
 
