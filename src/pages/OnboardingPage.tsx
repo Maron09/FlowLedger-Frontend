@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.store'
 import { useWorkspaceStore } from '../store/workspace.store'
@@ -6,7 +6,7 @@ import api from '../lib/axios'
 
 export default function OnboardingPage() {
   const { user } = useAuthStore()
-  const { setWorkspaces, setActiveWorkspace } = useWorkspaceStore()
+  const { workspaces, setWorkspaces, setActiveWorkspace } = useWorkspaceStore()
   const navigate = useNavigate()
 
   const defaultName = user?.firstName
@@ -18,7 +18,13 @@ export default function OnboardingPage() {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
-  // Set default name when type is selected
+  // If user already has workspaces, redirect away from onboarding
+  useEffect(() => {
+    if (workspaces.length > 0) {
+      navigate(`/w/${workspaces[0].id}/dashboard`, { replace: true })
+    }
+  }, [workspaces])
+
   const handleTypeSelect = (selected: 'PERSONAL' | 'BUSINESS') => {
     setType(selected)
     if (!name) {
@@ -28,7 +34,7 @@ export default function OnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!type) return
+    if (!type || creating) return
     setCreating(true)
     setError('')
 
@@ -37,7 +43,7 @@ export default function OnboardingPage() {
       const { data: allWorkspaces } = await api.get('/workspaces')
       setWorkspaces(allWorkspaces)
       setActiveWorkspace(workspace)
-      navigate(`/w/${workspace.id}/dashboard`)
+      navigate(`/w/${workspace.id}/dashboard`, { replace: true })
     } catch (err: any) {
       const msg = err.response?.data?.message
       setError(Array.isArray(msg) ? msg[0] : msg || 'Failed to create workspace')
@@ -49,7 +55,6 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#0f1117] flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
-        {/* Logo */}
         <div className="flex items-center gap-2.5 mb-10">
           <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
@@ -69,7 +74,6 @@ export default function OnboardingPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Type selection */}
           <div>
             <p className="text-white/50 text-xs uppercase tracking-wider mb-3">
               What best describes you?
@@ -109,7 +113,6 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Workspace name */}
           {type && (
             <div>
               <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">
