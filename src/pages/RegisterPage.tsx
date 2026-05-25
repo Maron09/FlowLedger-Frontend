@@ -27,8 +27,8 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
       })
-      setAuth(data.user, data.accessToken)
-      navigate('/dashboard')
+      setAuth(data.user, data.accessToken, data.refreshToken)
+      navigate('/')
     } catch (err: any) {
       const msg = err.response?.data?.message
       setError(Array.isArray(msg) ? msg[0] : msg || 'Registration failed')
