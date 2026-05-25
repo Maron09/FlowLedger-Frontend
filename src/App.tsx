@@ -17,10 +17,18 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SettingsPage from './pages/SettingsPage'
 import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
+import OnboardingPage from './pages/OnboardingPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
-  const { activeWorkspace } = useWorkspaceStore()
+  const { activeWorkspace, workspaces } = useWorkspaceStore()
+  const { user } = useAuthStore()
+
+  // Still loading workspaces
+  if (user && workspaces.length === 0) {
+    return <Navigate to="/onboarding" replace />
+  }
+
   if (!activeWorkspace) return <div className="min-h-screen bg-[#0f1117]" />
   return <Navigate to={`/w/${activeWorkspace.id}/dashboard`} replace />
 }
@@ -71,6 +79,10 @@ export default function App() {
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route
+        path="/onboarding"
+        element={isAuthenticated && !isAdmin ? <OnboardingPage /> : <Navigate to="/login" />}
+      />
 
       {/* Regular user workspace routes */}
       <Route
