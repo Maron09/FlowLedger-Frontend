@@ -1,13 +1,11 @@
 import axios from "axios";
 import { useAuthStore } from '../store/auth.store'
 
-
-
-
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
 })
-
+// 
+// Attach access token to every request
 api.interceptors.request.use((config) => {
   const { token } = useAuthStore.getState()
   if (token) {
@@ -63,8 +61,11 @@ api.interceptors.response.use(
           { refreshToken }
         )
 
-        const { setAuth, user } = useAuthStore.getState()
-        setAuth(user!, data.accessToken, data.refreshToken)
+        // Store new refresh token in localStorage
+        localStorage.setItem('refreshToken', data.refreshToken)
+
+        // Only update the access token in memory — don't touch user
+        useAuthStore.getState().setToken(data.accessToken)
 
         processQueue(null, data.accessToken)
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`

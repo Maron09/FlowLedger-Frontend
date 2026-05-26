@@ -11,7 +11,7 @@ interface Category {
 }
 
 interface Transaction {
-  id: string
+  id?: string
   title: string
   amount: string
   date: string
@@ -21,6 +21,7 @@ interface Transaction {
   categoryId?: string
   category?: { id: string; name: string }
   type: 'expense' | 'income'
+  isRecurring?: boolean
 }
 
 interface Props {
@@ -31,17 +32,18 @@ interface Props {
 
 export default function AddTransactionModal({ onClose, onSuccess, transaction }: Props) {
   const { workspaceId } = useParams<{ workspaceId: string }>()
-  const isEditing = !!transaction
+  const isEditing = !!transaction?.id
   const [tab, setTab] = useState<'expense' | 'income'>(transaction?.type ?? 'expense')
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState({
     title: transaction?.title ?? '',
     amount: transaction?.amount ?? '',
     date: transaction?.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    categoryId: transaction?.category?.id ?? '',
+    categoryId: transaction?.category?.id ?? transaction?.categoryId ?? '',
     paymentMethod: transaction?.paymentMethod ?? 'CARD',
     source: transaction?.source ?? '',
     notes: transaction?.notes ?? '',
+    isRecurring: transaction?.isRecurring ?? false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -68,24 +70,28 @@ export default function AddTransactionModal({ onClose, onSuccess, transaction }:
         if (tab === 'expense') {
           await api.patch(`/w/${workspaceId}/expenses/${transaction!.id}`, {
             title: form.title, amount: Number(form.amount), date: form.date,
-            categoryId: form.categoryId, paymentMethod: form.paymentMethod, notes: form.notes || undefined,
+            categoryId: form.categoryId, paymentMethod: form.paymentMethod,
+            notes: form.notes || undefined, isRecurring: form.isRecurring,
           })
         } else {
           await api.patch(`/w/${workspaceId}/income/${transaction!.id}`, {
             title: form.title, amount: Number(form.amount), date: form.date,
-            categoryId: form.categoryId || undefined, source: form.source || undefined, notes: form.notes || undefined,
+            categoryId: form.categoryId || undefined, source: form.source || undefined,
+            notes: form.notes || undefined, isRecurring: form.isRecurring,
           })
         }
       } else {
         if (tab === 'expense') {
           await api.post(`/w/${workspaceId}/expenses`, {
             title: form.title, amount: Number(form.amount), date: form.date,
-            categoryId: form.categoryId, paymentMethod: form.paymentMethod, notes: form.notes || undefined,
+            categoryId: form.categoryId, paymentMethod: form.paymentMethod,
+            notes: form.notes || undefined, isRecurring: form.isRecurring,
           })
         } else {
           await api.post(`/w/${workspaceId}/income`, {
             title: form.title, amount: Number(form.amount), date: form.date,
-            categoryId: form.categoryId || undefined, source: form.source || undefined, notes: form.notes || undefined,
+            categoryId: form.categoryId || undefined, source: form.source || undefined,
+            notes: form.notes || undefined, isRecurring: form.isRecurring,
           })
         }
       }
@@ -109,10 +115,10 @@ export default function AddTransactionModal({ onClose, onSuccess, transaction }:
 
         <div className="flex gap-1 bg-white/5 rounded-lg p-1 mb-5">
           <button type="button" onClick={() => !isEditing && setTab('expense')} className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === 'expense' ? 'bg-red-500/20 text-red-400' : 'text-white/30 hover:text-white/60'} ${isEditing ? 'cursor-default' : ''}`}>
-            {tab === 'expense' && activeWorkspace?.type === 'BUSINESS' ? 'Operating Expense' : 'Expense'}
+            {activeWorkspace?.type === 'BUSINESS' ? 'Operating Expense' : 'Expense'}
           </button>
           <button type="button" onClick={() => !isEditing && setTab('income')} className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${tab === 'income' ? 'bg-emerald-500/20 text-emerald-400' : 'text-white/30 hover:text-white/60'} ${isEditing ? 'cursor-default' : ''}`}>
-            {tab === 'income' && activeWorkspace?.type === 'BUSINESS' ? 'Revenue' : 'Income'}
+            {activeWorkspace?.type === 'BUSINESS' ? 'Revenue' : 'Income'}
           </button>
         </div>
 
@@ -160,6 +166,23 @@ export default function AddTransactionModal({ onClose, onSuccess, transaction }:
               <input type="text" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} placeholder="e.g. Tech Corp, Upwork" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/20 text-sm focus:outline-none focus:border-emerald-500/50 transition-all"/>
             </div>
           )}
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, isRecurring: !form.isRecurring })}
+              className={`w-5 h-5 rounded flex items-center justify-center border transition-colors flex-shrink-0 ${
+                form.isRecurring ? 'bg-emerald-500 border-emerald-500' : 'bg-white/5 border-white/20'
+              }`}
+            >
+              {form.isRecurring && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+            </button>
+            <label className="text-white/50 text-sm">Mark as recurring</label>
+          </div>
 
           {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">{error}</div>}
 

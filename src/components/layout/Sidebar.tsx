@@ -28,6 +28,7 @@ export default function Sidebar({ open, onClose }: Props) {
     { path: `/w/${workspaceId}/feedback`, label: 'Feedback' },
     { path: `/w/${workspaceId}/settings`, label: 'Settings' },
     { path: `/w/${workspaceId}/workspace-settings`, label: 'Workspace Settings' },
+    { path: `/w/${workspaceId}/recurring`, label: 'Recurring' },
   ]
 
   const handleLogout = () => {

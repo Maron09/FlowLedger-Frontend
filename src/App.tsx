@@ -18,6 +18,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import SettingsPage from './pages/SettingsPage'
 import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import OnboardingPage from './pages/OnboardingPage'
+import RecurringPage from './pages/RecurringPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="workspace-settings" element={<WorkspaceSettingsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
+        <Route path="recurring" element={<RecurringPage />} />
       </Route>
 
       {/* Admin routes */}
