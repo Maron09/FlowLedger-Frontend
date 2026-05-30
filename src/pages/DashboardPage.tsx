@@ -7,6 +7,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
+import InsightCard from '../components/ui/InsightsCard'
+
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -123,7 +125,9 @@ export default function DashboardPage() {
           sub={labels.savingsSub}
           positive={!!(overview && overview.savingsRate > 20)}
         />
+        <InsightCard workspaceId={workspaceId!} />
       </div>
+
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
