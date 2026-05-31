@@ -26,9 +26,11 @@ export default function Sidebar({ open, onClose }: Props) {
     { path: `/w/${workspaceId}/budgets`, label: 'Budgets' },
     { path: `/w/${workspaceId}/analytics`, label: 'Analytics' },
     { path: `/w/${workspaceId}/feedback`, label: 'Feedback' },
+    { path: `/w/${workspaceId}/recurring`, label: 'Recurring' },
+    { path: `/w/${workspaceId}/tax`, label: 'Tax' },
     { path: `/w/${workspaceId}/settings`, label: 'Settings' },
     { path: `/w/${workspaceId}/workspace-settings`, label: 'Workspace Settings' },
-    { path: `/w/${workspaceId}/recurring`, label: 'Recurring' },
+    
   ]
 
   const handleLogout = () => {
