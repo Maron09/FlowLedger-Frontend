@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { useRecentExpenses } from '../hooks/useExpenses'
@@ -8,7 +8,6 @@ import {
   PieChart, Pie, Cell,
 } from 'recharts'
 import InsightCard from '../components/ui/InsightsCard'
-
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -61,8 +60,8 @@ export default function DashboardPage() {
   const { activeWorkspace, workspaces, setActiveWorkspace } = useWorkspaceStore()
   const { overview, categories, trend, loading } = useAnalytics(workspaceId!)
   const { expenses } = useRecentExpenses(workspaceId!)
+  const [view, setView] = useState<'month' | 'alltime'>('month')
 
-  // Sync active workspace from URL
   useEffect(() => {
     if (workspaceId && workspaces.length > 0) {
       const ws = workspaces.find((w) => w.id === workspaceId)
@@ -73,6 +72,20 @@ export default function DashboardPage() {
   }, [workspaceId, workspaces])
 
   const labels = LABELS[activeWorkspace?.type ?? 'PERSONAL']
+
+  const displayIncome = view === 'alltime'
+    ? (overview?.allTimeIncome ?? 0)
+    : (overview?.totalIncome ?? 0)
+
+  const displayExpenses = view === 'alltime'
+    ? (overview?.allTimeExpenses ?? 0)
+    : (overview?.totalExpenses ?? 0)
+
+  const displaySavingsRate = displayIncome > 0
+    ? ((displayIncome - displayExpenses) / displayIncome) * 100
+    : 0
+
+  const subLabel = view === 'alltime' ? 'All time' : 'This month'
 
   if (loading) {
     return (
@@ -93,11 +106,36 @@ export default function DashboardPage() {
             {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        {activeWorkspace?.type === 'BUSINESS' && (
-          <span className="text-xs bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-md">
-            Business
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {activeWorkspace?.type === 'BUSINESS' && (
+            <span className="text-xs bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-md">
+              Business
+            </span>
+          )}
+          {/* Toggle */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
+            <button
+              onClick={() => setView('month')}
+              className={`text-xs px-3 py-1.5 rounded-md transition-all ${
+                view === 'month'
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'text-white/30 hover:text-white/60'
+              }`}
+            >
+              This month
+            </button>
+            <button
+              onClick={() => setView('alltime')}
+              className={`text-xs px-3 py-1.5 rounded-md transition-all ${
+                view === 'alltime'
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : 'text-white/30 hover:text-white/60'
+              }`}
+            >
+              All time
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -110,24 +148,24 @@ export default function DashboardPage() {
         />
         <SummaryCard
           label={labels.income}
-          value={formatNaira(overview?.totalIncome ?? 0)}
-          sub="This month"
+          value={formatNaira(displayIncome)}
+          sub={subLabel}
           positive
         />
         <SummaryCard
           label={labels.expenses}
-          value={formatNaira(overview?.totalExpenses ?? 0)}
-          sub="This month"
+          value={formatNaira(displayExpenses)}
+          sub={subLabel}
         />
         <SummaryCard
           label={labels.savingsRate}
-          value={`${overview?.savingsRate.toFixed(1) ?? 0}%`}
+          value={`${displaySavingsRate.toFixed(1)}%`}
           sub={labels.savingsSub}
-          positive={!!(overview && overview.savingsRate > 20)}
+          positive={displaySavingsRate > 20}
         />
-        <InsightCard workspaceId={workspaceId!} />
       </div>
 
+      <InsightCard workspaceId={workspaceId!} />
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -6,6 +6,8 @@ interface Overview {
   totalExpenses: number
   balance: number
   savingsRate: number
+  allTimeIncome: number
+  allTimeExpenses: number
 }
 
 interface CategoryBreakdown {
