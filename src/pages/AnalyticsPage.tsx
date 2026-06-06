@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAnalytics } from '../hooks/useAnalytics'
 import { useWorkspaceStore } from '../store/workspace.store'
+import api, { workspaceUrl } from '../lib/axios'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -36,6 +37,18 @@ const TOOLTIP_STYLE = {
   color: '#fff',
 }
 
+const SOURCE_COLORS = [
+  '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b',
+  '#ef4444', '#06b6d4', '#ec4899', '#84cc16',
+]
+
+interface IncomeSource {
+  source: string
+  total: number
+  count: number
+  percentage: number
+}
+
 export default function AnalyticsPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { activeWorkspace } = useWorkspaceStore()
@@ -43,6 +56,17 @@ export default function AnalyticsPage() {
   const months = getLast6Months()
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1].value)
   const { overview, categories, trend } = useAnalytics(workspaceId!, selectedMonth)
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([])
+  const [totalIncome, setTotalIncome] = useState(0)
+
+  useEffect(() => {
+    if (!workspaceId) return
+    api.get(workspaceUrl(workspaceId, `/analytics/income-sources?month=${selectedMonth}`))
+      .then(({ data }) => {
+        setIncomeSources(data.sources)
+        setTotalIncome(data.totalIncome)
+      })
+  }, [workspaceId, selectedMonth])
 
   const summaryCards = [
     { label: isBusiness ? 'Total Revenue' : 'Income', value: overview?.totalIncome ?? 0, color: '#10b981' },
@@ -127,6 +151,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {/* Savings / Profit rate */}
       <div className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5">
         <div className="flex items-center justify-between mb-3">
           <p className="text-white/60 text-xs uppercase tracking-wider">{isBusiness ? 'Profit margin' : 'Savings rate'}</p>
@@ -140,6 +165,56 @@ export default function AnalyticsPage() {
           <span className="text-white/20 text-xs">{(overview?.savingsRate ?? 0) > 20 ? `✓ Healthy ${isBusiness ? 'profit margin' : 'savings rate'}` : 'Aim for 20%+'}</span>
           <span className="text-white/20 text-xs">100%</span>
         </div>
+      </div>
+
+      {/* Income sources */}
+      <div className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-white/60 text-xs uppercase tracking-wider">
+            {isBusiness ? 'Revenue sources' : 'Income sources'}
+          </p>
+          {totalIncome > 0 && (
+            <p className="text-white/40 text-xs">{formatNaira(totalIncome)} total</p>
+          )}
+        </div>
+
+        {incomeSources.length === 0 ? (
+          <div className="flex items-center justify-center h-24">
+            <p className="text-white/20 text-sm">No income recorded this month</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {incomeSources.map((item, i) => (
+              <div key={item.source}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: SOURCE_COLORS[i % SOURCE_COLORS.length] }}
+                    />
+                    <span className="text-white/70 text-sm">{item.source}</span>
+                    <span className="text-white/20 text-xs">
+                      {item.count} txn{item.count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/70 text-sm font-medium">{formatNaira(item.total)}</span>
+                    <span className="text-white/30 text-xs w-10 text-right">{item.percentage.toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${item.percentage}%`,
+                      backgroundColor: SOURCE_COLORS[i % SOURCE_COLORS.length],
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            </div>
+        )}
       </div>
     </div>
   )
