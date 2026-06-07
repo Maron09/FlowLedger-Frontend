@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import api, { workspaceUrl } from '../lib/axios'
 import AddTransactionModal from '../components/ui/AddTransactionModal'
 import Toast from '../components/ui/Toast'
+import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
 
 interface Transaction {
   id: string
@@ -19,15 +20,12 @@ interface Transaction {
 }
 
 function formatNaira(amount: number) {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  }).format(amount)
+  return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
 }
 
 export default function RecurringPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { isEditor } = useWorkspaceRole()
   const [expenses, setExpenses] = useState<Transaction[]>([])
   const [income, setIncome] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,35 +85,18 @@ export default function RecurringPage() {
       ) : (
         <div className="space-y-2">
           {all.map((tx) => (
-            <div
-              key={`${tx.type}-${tx.id}`}
-              className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4"
-            >
+            <div key={`${tx.type}-${tx.id}`} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium flex-shrink-0"
-                  style={{
-                    backgroundColor: `${tx.category?.color ?? '#6366f1'}20`,
-                    color: tx.category?.color ?? '#6366f1',
-                  }}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium flex-shrink-0" style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}20`, color: tx.category?.color ?? '#6366f1' }}>
                   {tx.title[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-white/80 text-sm font-medium truncate">{tx.title}</p>
-                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 flex-shrink-0">
-                      recurring
-                    </span>
+                    <span className="text-xs px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 flex-shrink-0">recurring</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className="text-xs px-1.5 py-0.5 rounded-md"
-                      style={{
-                        backgroundColor: `${tx.category?.color ?? '#6366f1'}15`,
-                        color: tx.category?.color ?? '#6366f1',
-                      }}
-                    >
+                    <span className="text-xs px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${tx.category?.color ?? '#6366f1'}15`, color: tx.category?.color ?? '#6366f1' }}>
                       {tx.category?.name ?? 'Uncategorized'}
                     </span>
                     <span className="text-white/20 text-xs">
@@ -124,20 +105,18 @@ export default function RecurringPage() {
                   </div>
                 </div>
               </div>
-
               <div className="flex items-center gap-3 flex-shrink-0">
                 <p className={`text-sm font-semibold ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                   {tx.type === 'income' ? '+' : '-'}{formatNaira(Number(tx.amount))}
                 </p>
-                <button
-                  onClick={() => handleLogAgain(tx)}
-                  className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M12 5v14M5 12l7 7 7-7"/>
-                  </svg>
-                  Log again
-                </button>
+                {isEditor && (
+                  <button onClick={() => handleLogAgain(tx)} className="flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M12 5v14M5 12l7 7 7-7"/>
+                    </svg>
+                    Log again
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -155,7 +134,6 @@ export default function RecurringPage() {
           }}
         />
       )}
-
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </div>
   )

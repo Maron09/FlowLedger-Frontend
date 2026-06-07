@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import AddTransactionModal from '../ui/AddTransactionModal'
 import SessionWarning from '../ui/SessionWarning'
 import { useWorkspaceStore } from '../../store/workspace.store'
+import { useWorkspaceRole } from '../../hooks/useWorkspaceRole'
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -11,8 +12,8 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspaceStore()
+  const { isEditor } = useWorkspaceRole()
 
-  // Sync active workspace from URL param
   useEffect(() => {
     if (workspaceId && workspaces.length > 0) {
       const ws = workspaces.find((w) => w.id === workspaceId)
@@ -49,12 +50,14 @@ export default function AppLayout() {
             </div>
             <span className="text-white font-semibold text-sm">FlowLedger</span>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="w-8 h-8 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full flex items-center justify-center text-lg transition-colors"
-          >
-            +
-          </button>
+          {isEditor && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-8 h-8 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full flex items-center justify-center text-lg transition-colors"
+            >
+              +
+            </button>
+          )}
         </div>
 
         <main className="flex-1 overflow-auto">
@@ -63,12 +66,14 @@ export default function AppLayout() {
       </div>
 
       {/* Desktop floating button */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="hidden lg:flex fixed bottom-8 right-8 w-12 h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-lg items-center justify-center text-2xl transition-all hover:scale-110 z-40"
-      >
-        +
-      </button>
+      {isEditor && (
+        <button
+          onClick={() => setShowModal(true)}
+          className="hidden lg:flex fixed bottom-8 right-8 w-12 h-12 bg-emerald-500 hover:bg-emerald-400 text-white rounded-full shadow-lg items-center justify-center text-2xl transition-all hover:scale-110 z-40"
+        >
+          +
+        </button>
+      )}
 
       {showModal && (
         <AddTransactionModal

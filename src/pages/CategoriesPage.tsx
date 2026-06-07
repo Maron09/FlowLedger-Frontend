@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../lib/axios'
+import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
 
 interface Category {
   id: string
@@ -18,6 +19,7 @@ const PRESET_COLORS = [
 
 export default function CategoriesPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { isEditor } = useWorkspaceRole()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -83,9 +85,11 @@ export default function CategoriesPage() {
           <h1 className="text-white text-xl font-semibold">Categories</h1>
           <p className="text-white/30 text-sm mt-0.5">{categories.length} categories</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-          <span>+</span> New Category
-        </button>
+        {isEditor && (
+          <button onClick={openCreate} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            <span>+</span> New Category
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -132,7 +136,7 @@ export default function CategoriesPage() {
       ) : categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-60 border border-dashed border-white/10 rounded-xl">
           <p className="text-white/20 text-sm">No categories yet</p>
-          <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">Create your first category</button>
+          {isEditor && <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">Create your first category</button>}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -147,10 +151,12 @@ export default function CategoriesPage() {
                   <p className="text-white/30 text-xs capitalize">{cat.type.toLowerCase()}</p>
                 </div>
               </div>
-              <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEdit(cat)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">Edit</button>
-                <button onClick={() => handleDelete(cat.id)} className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-red-500/5 transition-colors">Delete</button>
-              </div>
+              {isEditor && (
+                <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => openEdit(cat)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">Edit</button>
+                  <button onClick={() => handleDelete(cat.id)} className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded-lg hover:bg-red-500/5 transition-colors">Delete</button>
+                </div>
+              )}
             </div>
           ))}
         </div>

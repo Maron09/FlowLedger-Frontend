@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAuthStore } from '../store/auth.store'
+import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
 import api, { workspaceUrl } from '../lib/axios'
 
 declare global {
@@ -22,6 +23,7 @@ const EXPORT_PRICE = 100
 export default function ExportPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { user } = useAuthStore()
+  const { isEditor } = useWorkspaceRole()
   const [exportType, setExportType] = useState<'all' | 'expenses' | 'income'>('all')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
@@ -74,41 +76,41 @@ export default function ExportPage() {
   }
 
   const handleExport = () => {
-  if (!startDate || !endDate) {
-    setError('Please select a date range')
-    return
-  }
-  if (new Date(startDate) > new Date(endDate)) {
-    setError('Start date must be before end date')
-    return
-  }
-  setError('')
+    if (!startDate || !endDate) {
+      setError('Please select a date range')
+      return
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      setError('Start date must be before end date')
+      return
+    }
+    setError('')
 
-  if (!window.PaystackPop) {
-    setError('Payment system not loaded. Please refresh and try again.')
-    return
+    if (!window.PaystackPop) {
+      setError('Payment system not loaded. Please refresh and try again.')
+      return
+    }
+
+    setLoading(true)
+    let paid = false
+
+    window.PaystackPop.setup({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email: user?.email,
+      amount: EXPORT_PRICE * 100,
+      currency: 'NGN',
+      ref: `export_${Date.now()}`,
+      callback: function(response: any) {
+        console.log('callback:', response)
+        paid = true
+        downloadExport()
+      },
+      onClose: function() {
+        console.log('closed, paid:', paid)
+        if (!paid) setLoading(false)
+      },
+    }).openIframe()
   }
-
-  setLoading(true)
-  let paid = false
-
-  window.PaystackPop.setup({
-    key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    email: user?.email,
-    amount: EXPORT_PRICE * 100,
-    currency: 'NGN',
-    ref: `export_${Date.now()}`,
-    callback: function(response: any) {
-      console.log('callback:', response)
-      paid = true
-      downloadExport()
-    },
-    onClose: function() {
-      console.log('closed, paid:', paid)
-      if (!paid) setLoading(false)
-    },
-  }).openIframe()
-}
 
   return (
     <div className="p-4 md:p-8 max-w-2xl space-y-6">
@@ -200,30 +202,37 @@ export default function ExportPage() {
             </div>
             <p className="text-white text-xl font-semibold">{formatNaira(EXPORT_PRICE)}</p>
           </div>
-          <button
-            onClick={handleExport}
-            disabled={loading}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-medium py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                Processing...
-              </>
-            ) : (
-              <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Pay {formatNaira(EXPORT_PRICE)} & Download
-              </>
-            )}
-          </button>
+
+          {isEditor ? (
+            <button
+              onClick={handleExport}
+              disabled={loading}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-medium py-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Pay {formatNaira(EXPORT_PRICE)} & Download
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white/30 text-sm text-center">
+              You need Editor access or above to export data
+            </div>
+          )}
         </div>
       </div>
 

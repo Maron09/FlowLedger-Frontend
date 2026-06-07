@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../lib/axios'
+import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
 
 interface Budget {
   id: string
@@ -30,6 +31,7 @@ function formatNaira(amount: number) {
 
 export default function BudgetsPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
+  const { isAdmin } = useWorkspaceRole()
   const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,9 +107,11 @@ export default function BudgetsPage() {
           <h1 className="text-white text-xl font-semibold">Budgets</h1>
           <p className="text-white/30 text-sm mt-0.5">Monthly spending limits</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-          <span>+</span> Set Budget
-        </button>
+        {isAdmin && (
+          <button onClick={openCreate} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+            <span>+</span> Set Budget
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -143,7 +147,7 @@ export default function BudgetsPage() {
       ) : budgetStatuses.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-60 border border-dashed border-white/10 rounded-xl">
           <p className="text-white/20 text-sm">No budgets set</p>
-          <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">Set your first budget</button>
+          {isAdmin && <button onClick={openCreate} className="text-emerald-400 text-sm mt-2 hover:text-emerald-300">Set your first budget</button>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -166,10 +170,12 @@ export default function BudgetsPage() {
                       <p className="text-white/70 text-sm whitespace-nowrap">{formatNaira(spent)} <span className="text-white/30">/ {formatNaira(Number(budget.amount))}</span></p>
                       <p className="text-xs" style={{ color: statusColor(status) }}>{status === 'over' ? `${formatNaira(Math.abs(remaining))} over` : `${formatNaira(remaining)} left`}</p>
                     </div>
-                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(bs)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(budget.id)} className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500/5 transition-colors">Delete</button>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => openEdit(bs)} className="text-white/30 hover:text-white/70 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors">Edit</button>
+                        <button onClick={() => handleDelete(budget.id)} className="text-white/30 hover:text-red-400 text-xs px-2 py-1 rounded hover:bg-red-500/5 transition-colors">Delete</button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">

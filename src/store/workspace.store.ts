@@ -2,11 +2,12 @@ import { create } from 'zustand'
 
 
 interface Workspace {
-    id: string
-    name: string
-    type: 'PERSONAL' | 'BUSINESS'
-    currency: string
-    members: { role: string }[]
+  id: string
+  name: string
+  type: 'PERSONAL' | 'BUSINESS'
+  currency: string
+  ownerId: string
+  members: { role: string; userId: string }[]
 }
 
 interface WorkspaceState {
