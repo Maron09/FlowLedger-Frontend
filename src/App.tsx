@@ -21,6 +21,7 @@ import OnboardingPage from './pages/OnboardingPage'
 import RecurringPage from './pages/RecurringPage'
 import TaxPage from './pages/TaxPage'
 import ExportPage from './pages/ExportPage'
+import AiPage from './pages/AiPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
@@ -103,6 +104,7 @@ export default function App() {
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="recurring" element={<RecurringPage />} />
         <Route path="tax" element={<TaxPage />} />
+        <Route path="ai" element={<AiPage />} />
       </Route>
 
       {/* Admin routes */}

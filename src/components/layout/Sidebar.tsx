@@ -41,6 +41,7 @@ export default function Sidebar({ open, onClose }: Props) {
       label: 'Tools',
       items: [
         { path: `/w/${workspaceId}/export`, label: 'Export' },
+        { path: `/w/${workspaceId}/ai`, label: 'AI Assistant' },
         { path: `/w/${workspaceId}/feedback`, label: 'Feedback' },
       ],
     },
