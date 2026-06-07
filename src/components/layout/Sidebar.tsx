@@ -19,18 +19,38 @@ export default function Sidebar({ open, onClose }: Props) {
   const [newWorkspace, setNewWorkspace] = useState({ name: '', type: 'PERSONAL' })
   const [creating, setCreating] = useState(false)
 
-  const navItems = [
-    { path: `/w/${workspaceId}/dashboard`, label: 'Dashboard' },
-    { path: `/w/${workspaceId}/transactions`, label: 'Transactions' },
-    { path: `/w/${workspaceId}/categories`, label: 'Categories' },
-    { path: `/w/${workspaceId}/budgets`, label: 'Budgets' },
-    { path: `/w/${workspaceId}/analytics`, label: 'Analytics' },
-    { path: `/w/${workspaceId}/feedback`, label: 'Feedback' },
-    { path: `/w/${workspaceId}/recurring`, label: 'Recurring' },
-    { path: `/w/${workspaceId}/tax`, label: 'Tax' },
-    { path: `/w/${workspaceId}/settings`, label: 'Settings' },
-    { path: `/w/${workspaceId}/workspace-settings`, label: 'Workspace Settings' },
-    
+  const navSections = [
+    {
+      label: 'Main',
+      items: [
+        { path: `/w/${workspaceId}/dashboard`, label: 'Dashboard' },
+        { path: `/w/${workspaceId}/transactions`, label: 'Transactions' },
+        { path: `/w/${workspaceId}/recurring`, label: 'Recurring' },
+      ],
+    },
+    {
+      label: 'Finance',
+      items: [
+        { path: `/w/${workspaceId}/categories`, label: 'Categories' },
+        { path: `/w/${workspaceId}/budgets`, label: 'Budgets' },
+        { path: `/w/${workspaceId}/analytics`, label: 'Analytics' },
+        { path: `/w/${workspaceId}/tax`, label: 'Tax' },
+      ],
+    },
+    {
+      label: 'Tools',
+      items: [
+        { path: `/w/${workspaceId}/export`, label: 'Export' },
+        { path: `/w/${workspaceId}/feedback`, label: 'Feedback' },
+      ],
+    },
+    {
+      label: 'Account',
+      items: [
+        { path: `/w/${workspaceId}/settings`, label: 'Settings' },
+        { path: `/w/${workspaceId}/workspace-settings`, label: 'Workspace' },
+      ],
+    },
   ]
 
   const handleLogout = () => {
@@ -76,8 +96,9 @@ export default function Sidebar({ open, onClose }: Props) {
         lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-auto
         ${open ? 'translate-x-0' : '-translate-x-full'}
       `}>
+
         {/* Logo */}
-        <div className="px-6 py-4 border-b border-white/5">
+        <div className="px-6 py-4 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
@@ -89,11 +110,12 @@ export default function Sidebar({ open, onClose }: Props) {
             <span className="text-white font-semibold tracking-tight">FlowLedger</span>
           </div>
         </div>
+
         {/* Workspace switcher */}
-        <div className="p-3 border-b border-white/5">
+        <div className="p-3 border-b border-white/5 flex-shrink-0">
           <button
             onClick={() => setShowSwitcher(!showSwitcher)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
           >
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${
               activeWorkspace?.type === 'BUSINESS' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'
@@ -112,7 +134,6 @@ export default function Sidebar({ open, onClose }: Props) {
             </svg>
           </button>
 
-          {/* Switcher dropdown */}
           {showSwitcher && (
             <div className="mt-1 space-y-0.5">
               {workspaces.map((ws) => (
@@ -138,7 +159,6 @@ export default function Sidebar({ open, onClose }: Props) {
                 </button>
               ))}
 
-              {/* Create new workspace */}
               {!showCreateForm ? (
                 <button
                   onClick={() => setShowCreateForm(true)}
@@ -187,28 +207,37 @@ export default function Sidebar({ open, onClose }: Props) {
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                  isActive
-                    ? 'bg-emerald-500/10 text-emerald-400'
-                    : 'text-white/40 hover:text-white/70 hover:bg-white/5'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
+        {/* Nav with sections */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+          {navSections.map((section) => (
+            <div key={section.label}>
+              <p className="text-white/20 text-xs uppercase tracking-wider px-3 mb-1">
+                {section.label}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
         {/* User */}
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-white/5 flex-shrink-0">
           <div className="flex items-center gap-3 px-3 py-2 mb-1">
             <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
               <span className="text-emerald-400 text-xs font-medium">

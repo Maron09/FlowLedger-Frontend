@@ -20,6 +20,7 @@ import WorkspaceSettingsPage from './pages/WorkspaceSettingsPage'
 import OnboardingPage from './pages/OnboardingPage'
 import RecurringPage from './pages/RecurringPage'
 import TaxPage from './pages/TaxPage'
+import ExportPage from './pages/ExportPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="budgets" element={<BudgetsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="export" element={<ExportPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="workspace-settings" element={<WorkspaceSettingsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
