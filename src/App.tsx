@@ -25,11 +25,16 @@ import AiPage from './pages/AiPage'
 import api from './lib/axios'
 
 function WorkspaceRedirect() {
-  const { activeWorkspace, workspaces } = useWorkspaceStore()
+  const { activeWorkspace, workspaces, workspacesLoaded } = useWorkspaceStore()
   const { user } = useAuthStore()
 
-  // Still loading workspaces
-  if (user && workspaces.length === 0) {
+  // Still loading workspaces — wait
+  if (user && !workspacesLoaded) {
+    return <div className="min-h-screen bg-[#0f1117]" />
+  }
+
+  // Loaded but no workspaces — go to onboarding
+  if (workspacesLoaded && workspaces.length === 0) {
     return <Navigate to="/onboarding" replace />
   }
 
@@ -66,7 +71,6 @@ export default function App() {
       api.get('/workspaces').then(({ data: workspaces }) => {
         setWorkspaces(workspaces)
 
-        // Priority: lastWorkspaceId from user profile → localStorage → first workspace
         const lastWorkspaceId = (user as any).lastWorkspaceId
         const savedId = lastWorkspaceId ?? localStorage.getItem('activeWorkspaceId')
         const saved = workspaces.find((w: any) => w.id === savedId)

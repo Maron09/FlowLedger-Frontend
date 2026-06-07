@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuthStore } from '../../store/auth.store'
 import api from '../../lib/axios'
 
-const INACTIVITY_TIMEOUT = 25 * 60 * 1000  // 25 minutes
-// const INACTIVITY_TIMEOUT = 10 * 1000  // 10 seconds for testing
+const INACTIVITY_TIMEOUT = 60 * 60 * 1000  // 60 minutes
 
 export default function SessionWarning() {
   const { logout, setAuth, user } = useAuthStore()
@@ -55,7 +54,6 @@ export default function SessionWarning() {
     }, 1000)
   }, [])
 
-  // Auto logout when countdown hits 0
   useEffect(() => {
     if (countdown === 0 && showWarning) {
       handleLogout()
@@ -106,7 +104,6 @@ export default function SessionWarning() {
 
         <p className="text-white/60 text-sm mb-2">Your session will expire in</p>
 
-        {/* Countdown circle */}
         <div className="flex items-center justify-center my-4">
           <div className="relative w-20 h-20">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
