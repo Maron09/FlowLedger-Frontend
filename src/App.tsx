@@ -23,6 +23,7 @@ import TaxPage from './pages/TaxPage'
 import ExportPage from './pages/ExportPage'
 import AiPage from './pages/AiPage'
 import api from './lib/axios'
+import PortfolioPage from './pages/portfolio/index'
 
 function WorkspaceRedirect() {
   const { activeWorkspace, workspaces, workspacesLoaded } = useWorkspaceStore()
@@ -108,6 +109,7 @@ export default function App() {
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="recurring" element={<RecurringPage />} />
         <Route path="tax" element={<TaxPage />} />
+        <Route path="portfolio" element={<PortfolioPage />} />
         <Route path="ai" element={<AiPage />} />
       </Route>
 

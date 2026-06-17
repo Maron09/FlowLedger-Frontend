@@ -35,6 +35,7 @@ export default function Sidebar({ open, onClose }: Props) {
         { path: `/w/${workspaceId}/budgets`, label: 'Budgets' },
         { path: `/w/${workspaceId}/analytics`, label: 'Analytics' },
         { path: `/w/${workspaceId}/tax`, label: 'Tax' },
+        { path: `/w/${workspaceId}/portfolio`, label: 'Portfolio' },
       ],
     },
     {
