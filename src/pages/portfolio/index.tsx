@@ -3,35 +3,9 @@ import { useParams } from 'react-router-dom'
 import api from '../../lib/axios'
 import { usePortfolio, useInvalidatePortfolio } from '../../hooks/usePortfolio'
 
-interface Trade {
-  id: string
-  units: number
-  pricePerUnit: number
-  totalCost: number
-  buyDate: string
-  notes?: string
-}
 
-interface Position {
-  id: string
-  symbol: string
-  name: string
-  exchange: string
-  currency: string
-  totalUnits: number
-  avgCost: number
-  totalCost: number
-  currentPrice: number | null
-  currentValue: number | null
-  gainLoss: number | null
-  gainLossPct: number | null
-  trades: Trade[]
-}
 
-interface Summary {
-  NGN: { totalValue: number; totalCost: number; gainLoss: number; gainLossPct: number }
-  USD: { totalValue: number; totalCost: number; gainLoss: number; gainLossPct: number }
-}
+
 
 interface SearchResult {
   symbol: string

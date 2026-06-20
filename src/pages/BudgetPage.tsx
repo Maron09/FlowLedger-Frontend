@@ -12,12 +12,7 @@ interface Budget {
   category: { id: string; name: string; color: string }
 }
 
-interface Category {
-  id: string
-  name: string
-  color: string
-  type: string
-}
+
 
 interface BudgetStatus {
   budget: Budget
