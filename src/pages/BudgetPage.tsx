@@ -43,17 +43,7 @@ export default function BudgetsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // const fetchData = () => {
-  //   Promise.all([
-  //     api.get(`/w/${workspaceId}/analytics/budgets`),
-  //     api.get(`/w/${workspaceId}/categories`),
-  //   ]).then(([budgetsRes, categoriesRes]) => {
-  //     setBudgetStatuses(budgetsRes.data)
-  //     setCategories(categoriesRes.data)
-  //   }).finally(() => setLoading(false))
-  // }
-
-  // useEffect(() => { if (workspaceId) fetchData() }, [workspaceId])
+  
 
   invalidateBudgets(workspaceId!)
 
@@ -101,7 +91,7 @@ export default function BudgetsPage() {
   }
 
   const availableCategories = editBudget
-    ? categories.filter((c) => c.id === editBudget.budget.category.id)
+    ? categories.filter((c: any) => c.id === editBudget.budget.category.id)
     : categories
 
   return (
@@ -127,7 +117,7 @@ export default function BudgetsPage() {
                 <label className="block text-white/50 text-xs uppercase tracking-wider mb-1.5">Category</label>
                 <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} required disabled={!!editBudget} className="w-full bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-all disabled:opacity-50">
                   <option value="" style={{ backgroundColor: '#0f1117' }}>Select category</option>
-                  {availableCategories.map((cat) => (
+                  {availableCategories.map((cat: any) => (
                     <option key={cat.id} value={cat.id} style={{ backgroundColor: '#0f1117' }}>{cat.name}</option>
                   ))}
                 </select>
@@ -155,7 +145,7 @@ export default function BudgetsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {budgetStatuses.map((bs) => {
+          {budgetStatuses.map((bs: any) => {
             const { budget, spent, remaining, percentage, status } = bs
             return (
               <div key={budget.id} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 md:p-5 group">

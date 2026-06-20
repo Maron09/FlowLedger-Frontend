@@ -4,13 +4,7 @@ import api from '../lib/axios'
 import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
 import { useCategories, useInvalidateCategories } from '../hooks/useCategories'
 
-interface Category {
-  id: string
-  name: string
-  color: string
-  icon: string
-  type: string
-}
+
 
 const PRESET_COLORS = [
   '#10b981', '#f97316', '#3b82f6', '#8b5cf6',
@@ -29,11 +23,6 @@ export default function CategoriesPage() {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // const fetchCategories = () => {
-  //   api.get(`/w/${workspaceId}/categories`).then(({ data }) => setCategories(data)).finally(() => setLoading(false))
-  // }
-
-  // useEffect(() => { if (workspaceId) fetchCategories() }, [workspaceId])
 
   const openCreate = () => {
     setEditId(null)
@@ -42,7 +31,7 @@ export default function CategoriesPage() {
     setShowForm(true)
   }
 
-  const openEdit = (cat: Category) => {
+  const openEdit = (cat: { id: string; name: string; color: string; icon: string; type: string }) => {
     setEditId(cat.id)
     setForm({ name: cat.name, color: cat.color, icon: cat.icon, type: cat.type })
     setError('')
@@ -141,7 +130,7 @@ export default function CategoriesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {categories.map((cat) => (
+          {categories.map((cat: any) => (
             <div key={cat.id} className="bg-[#0a0d12] border border-white/5 rounded-xl p-4 flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>

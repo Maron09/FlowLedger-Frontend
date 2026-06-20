@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import api, { workspaceUrl } from '../lib/axios'
 import AddTransactionModal from '../components/ui/AddTransactionModal'
 import Toast from '../components/ui/Toast'
 import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
@@ -34,18 +33,7 @@ export default function RecurringPage() {
   const [logAgainTransaction, setLogAgainTransaction] = useState<any>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  // const fetchRecurring = () => {
-  //   if (!workspaceId) return
-  //   Promise.all([
-  //     api.get(workspaceUrl(workspaceId, '/expenses?isRecurring=true&limit=100')),
-  //     api.get(workspaceUrl(workspaceId, '/income?isRecurring=true&limit=100')),
-  //   ]).then(([expRes, incRes]) => {
-  //     setExpenses(expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })))
-  //     setIncome(incRes.data.items.map((i: any) => ({ ...i, type: 'income' })))
-  //   }).finally(() => setLoading(false))
-  // }
-
-  // useEffect(() => { fetchRecurring() }, [workspaceId])
+  
 
   const all = [...expenses, ...income].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()

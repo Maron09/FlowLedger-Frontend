@@ -40,7 +40,6 @@ interface BusinessTaxEstimate {
   note: string
 }
 
-type TaxEstimate = PersonalTaxEstimate | BusinessTaxEstimate
 
 interface TaxProfile {
   employmentType: 'SALARIED' | 'SELF_EMPLOYED' | 'MIXED'
@@ -52,12 +51,7 @@ interface TaxProfile {
   deductibleCategories?: string[]
 }
 
-interface Category {
-  id: string
-  name: string
-  color: string
-  type: string
-}
+
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -128,32 +122,10 @@ export default function TaxPage() {
 
   const isBusiness = activeWorkspace?.type === 'BUSINESS'
 
-  const incomeCategories = allCategories.filter((c) => c.type === 'INCOME' || c.type === 'BOTH')
-  const expenseCategories = allCategories.filter((c) => c.type === 'EXPENSE' || c.type === 'BOTH')
+  const incomeCategories = allCategories.filter((c: any) => c.type === 'INCOME' || c.type === 'BOTH')
+  const expenseCategories = allCategories.filter((c: any) => c.type === 'EXPENSE' || c.type === 'BOTH')
 
-  // const fetchData = () => {
-  //   if (!workspaceId) return
-  //   Promise.all([
-  //     api.get(workspaceUrl(workspaceId, '/analytics/tax')),
-  //     api.get(workspaceUrl(workspaceId, '/analytics/tax/profile')),
-  //     api.get(workspaceUrl(workspaceId, '/categories')),
-  //   ]).then(([taxRes, profileRes, catRes]) => {
-  //     setEstimate(taxRes.data)
-  //     setProfile(profileRes.data)
-  //     setProfileForm({
-  //       employmentType: profileRes.data.employmentType ?? 'SELF_EMPLOYED',
-  //       taxableCategories: profileRes.data.taxableCategories ?? [],
-  //       businessSector: profileRes.data.businessSector ?? 'GENERAL',
-  //       businessSize: profileRes.data.businessSize ?? 'SMALL',
-  //       handlesPaye: profileRes.data.handlesPaye ?? false,
-  //       vatRegistered: profileRes.data.vatRegistered ?? false,
-  //       deductibleCategories: profileRes.data.deductibleCategories ?? [],
-  //     })
-  //     setAllCategories(catRes.data)
-  //   }).finally(() => setLoading(false))
-  // }
-
-  // useEffect(() => { fetchData() }, [workspaceId])
+  
   useEffect(() => {
     if (profile) {
       setProfileForm({
@@ -257,7 +229,7 @@ export default function TaxPage() {
               {(profileForm.employmentType === 'SALARIED' || profileForm.employmentType === 'MIXED') && incomeCategories.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-white/50 text-xs uppercase tracking-wider">Taxable income categories</p>
-                  {incomeCategories.map((cat) => (
+                  {incomeCategories.map((cat: any) => (
                     <button key={cat.id} type="button" onClick={() => toggleCategory(cat.id, 'taxableCategories')}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
                         profileForm.taxableCategories.includes(cat.id) ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 bg-white/5 hover:border-white/20'
@@ -347,7 +319,7 @@ export default function TaxPage() {
                 <div className="space-y-2">
                   <p className="text-white/50 text-xs uppercase tracking-wider">Taxable revenue categories</p>
                   <p className="text-white/20 text-xs">Leave all unchecked to include all income</p>
-                  {incomeCategories.map((cat) => (
+                  {incomeCategories.map((cat: any) => (
                     <button key={cat.id} type="button" onClick={() => toggleCategory(cat.id, 'taxableCategories')}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
                         profileForm.taxableCategories.includes(cat.id) ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 bg-white/5 hover:border-white/20'
@@ -368,7 +340,7 @@ export default function TaxPage() {
                 <div className="space-y-2">
                   <p className="text-white/50 text-xs uppercase tracking-wider">Deductible expense categories</p>
                   <p className="text-white/20 text-xs">Leave all unchecked to include all expenses</p>
-                  {expenseCategories.map((cat) => (
+                  {expenseCategories.map((cat: any) => (
                     <button key={cat.id} type="button" onClick={() => toggleCategory(cat.id, 'deductibleCategories')}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
                         profileForm.deductibleCategories?.includes(cat.id) ? 'border-blue-500/50 bg-blue-500/10' : 'border-white/10 bg-white/5 hover:border-white/20'

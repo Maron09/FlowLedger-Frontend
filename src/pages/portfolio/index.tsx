@@ -124,7 +124,7 @@ export default function PortfolioPage() {
       ) : (
         <div className="space-y-3">
           <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest">Positions</h2>
-          {positions.map((pos) => (
+          {positions.map((pos: any) => (
             <div key={pos.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
               {/* Position header */}
               <button
@@ -182,7 +182,7 @@ export default function PortfolioPage() {
                 <div className="border-t border-white/5 px-5 pb-5">
                   <p className="text-xs text-white/30 uppercase tracking-widest mt-4 mb-3">Trade history</p>
                   <div className="space-y-2">
-                    {pos.trades.map((trade) => (
+                    {pos.trades.map((trade: any) => (
                       <div key={trade.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                         <div>
                           <p className="text-white/70 text-sm">{trade.units} units @ {formatCurrency(trade.pricePerUnit, pos.currency)}</p>
