@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api, { workspaceUrl } from '../lib/axios'
 import AddTransactionModal from '../components/ui/AddTransactionModal'
 import Toast from '../components/ui/Toast'
 import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
+import { useRecurring, useInvalidateRecurring } from '../hooks/useRecurring'
 
 interface Transaction {
   id: string
@@ -26,24 +27,25 @@ function formatNaira(amount: number) {
 export default function RecurringPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { isEditor } = useWorkspaceRole()
-  const [expenses, setExpenses] = useState<Transaction[]>([])
-  const [income, setIncome] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  const { recurring, loading } = useRecurring(workspaceId!)
+  const invalidateRecurring = useInvalidateRecurring()
+  const expenses = recurring.filter((t: any) => t.type === 'expense')
+  const income = recurring.filter((t: any) => t.type === 'income')
   const [logAgainTransaction, setLogAgainTransaction] = useState<any>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  const fetchRecurring = () => {
-    if (!workspaceId) return
-    Promise.all([
-      api.get(workspaceUrl(workspaceId, '/expenses?isRecurring=true&limit=100')),
-      api.get(workspaceUrl(workspaceId, '/income?isRecurring=true&limit=100')),
-    ]).then(([expRes, incRes]) => {
-      setExpenses(expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })))
-      setIncome(incRes.data.items.map((i: any) => ({ ...i, type: 'income' })))
-    }).finally(() => setLoading(false))
-  }
+  // const fetchRecurring = () => {
+  //   if (!workspaceId) return
+  //   Promise.all([
+  //     api.get(workspaceUrl(workspaceId, '/expenses?isRecurring=true&limit=100')),
+  //     api.get(workspaceUrl(workspaceId, '/income?isRecurring=true&limit=100')),
+  //   ]).then(([expRes, incRes]) => {
+  //     setExpenses(expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })))
+  //     setIncome(incRes.data.items.map((i: any) => ({ ...i, type: 'income' })))
+  //   }).finally(() => setLoading(false))
+  // }
 
-  useEffect(() => { fetchRecurring() }, [workspaceId])
+  // useEffect(() => { fetchRecurring() }, [workspaceId])
 
   const all = [...expenses, ...income].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -130,7 +132,7 @@ export default function RecurringPage() {
           onSuccess={() => {
             setLogAgainTransaction(null)
             setToast('Transaction logged successfully')
-            fetchRecurring()
+            invalidateRecurring(workspaceId!)
           }}
         />
       )}

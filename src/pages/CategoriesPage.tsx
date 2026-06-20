@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../lib/axios'
 import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
+import { useCategories, useInvalidateCategories } from '../hooks/useCategories'
 
 interface Category {
   id: string
@@ -20,19 +21,19 @@ const PRESET_COLORS = [
 export default function CategoriesPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { isEditor } = useWorkspaceRole()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const { categories, loading } = useCategories(workspaceId!)
+  const invalidateCategories = useInvalidateCategories()
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', color: '#10b981', icon: 'wallet', type: 'EXPENSE' })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const fetchCategories = () => {
-    api.get(`/w/${workspaceId}/categories`).then(({ data }) => setCategories(data)).finally(() => setLoading(false))
-  }
+  // const fetchCategories = () => {
+  //   api.get(`/w/${workspaceId}/categories`).then(({ data }) => setCategories(data)).finally(() => setLoading(false))
+  // }
 
-  useEffect(() => { if (workspaceId) fetchCategories() }, [workspaceId])
+  // useEffect(() => { if (workspaceId) fetchCategories() }, [workspaceId])
 
   const openCreate = () => {
     setEditId(null)
@@ -59,7 +60,7 @@ export default function CategoriesPage() {
         await api.post(`/w/${workspaceId}/categories`, form)
       }
       setShowForm(false)
-      fetchCategories()
+      invalidateCategories(workspaceId!)
     } catch (err: any) {
       const msg = err.response?.data?.message
       setError(Array.isArray(msg) ? msg[0] : msg || 'Failed to save')
@@ -72,7 +73,7 @@ export default function CategoriesPage() {
     if (!confirm('Delete this category?')) return
     try {
       await api.delete(`/w/${workspaceId}/categories/${id}`)
-      fetchCategories()
+      invalidateCategories(workspaceId!)
     } catch (err: any) {
       alert(err.response?.data?.message || 'Cannot delete category')
     }

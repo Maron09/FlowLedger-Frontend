@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useWorkspaceStore } from '../store/workspace.store'
 import api, { workspaceUrl } from '../lib/axios'
+import { useTax } from '../hooks/useTax'
+import { useCategories } from '../hooks/useCategories'
+import { useQueryClient } from '@tanstack/react-query'
+
 
 interface PersonalTaxEstimate {
   type: 'PERSONAL'
@@ -105,10 +109,11 @@ function CheckBox({ checked, onClick }: { checked: boolean; onClick: () => void 
 export default function TaxPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { activeWorkspace } = useWorkspaceStore()
-  const [estimate, setEstimate] = useState<TaxEstimate | null>(null)
-  const [profile, setProfile] = useState<TaxProfile | null>(null)
-  const [allCategories, setAllCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const { tax, loading } = useTax(workspaceId!)
+  const { categories: allCategories } = useCategories(workspaceId!)
+  const estimate = tax?.estimate ?? null
+  const profile = tax?.profile ?? null
   const [showSetup, setShowSetup] = useState(false)
   const [saving, setSaving] = useState(false)
   const [profileForm, setProfileForm] = useState<TaxProfile>({
@@ -126,36 +131,49 @@ export default function TaxPage() {
   const incomeCategories = allCategories.filter((c) => c.type === 'INCOME' || c.type === 'BOTH')
   const expenseCategories = allCategories.filter((c) => c.type === 'EXPENSE' || c.type === 'BOTH')
 
-  const fetchData = () => {
-    if (!workspaceId) return
-    Promise.all([
-      api.get(workspaceUrl(workspaceId, '/analytics/tax')),
-      api.get(workspaceUrl(workspaceId, '/analytics/tax/profile')),
-      api.get(workspaceUrl(workspaceId, '/categories')),
-    ]).then(([taxRes, profileRes, catRes]) => {
-      setEstimate(taxRes.data)
-      setProfile(profileRes.data)
-      setProfileForm({
-        employmentType: profileRes.data.employmentType ?? 'SELF_EMPLOYED',
-        taxableCategories: profileRes.data.taxableCategories ?? [],
-        businessSector: profileRes.data.businessSector ?? 'GENERAL',
-        businessSize: profileRes.data.businessSize ?? 'SMALL',
-        handlesPaye: profileRes.data.handlesPaye ?? false,
-        vatRegistered: profileRes.data.vatRegistered ?? false,
-        deductibleCategories: profileRes.data.deductibleCategories ?? [],
-      })
-      setAllCategories(catRes.data)
-    }).finally(() => setLoading(false))
-  }
+  // const fetchData = () => {
+  //   if (!workspaceId) return
+  //   Promise.all([
+  //     api.get(workspaceUrl(workspaceId, '/analytics/tax')),
+  //     api.get(workspaceUrl(workspaceId, '/analytics/tax/profile')),
+  //     api.get(workspaceUrl(workspaceId, '/categories')),
+  //   ]).then(([taxRes, profileRes, catRes]) => {
+  //     setEstimate(taxRes.data)
+  //     setProfile(profileRes.data)
+  //     setProfileForm({
+  //       employmentType: profileRes.data.employmentType ?? 'SELF_EMPLOYED',
+  //       taxableCategories: profileRes.data.taxableCategories ?? [],
+  //       businessSector: profileRes.data.businessSector ?? 'GENERAL',
+  //       businessSize: profileRes.data.businessSize ?? 'SMALL',
+  //       handlesPaye: profileRes.data.handlesPaye ?? false,
+  //       vatRegistered: profileRes.data.vatRegistered ?? false,
+  //       deductibleCategories: profileRes.data.deductibleCategories ?? [],
+  //     })
+  //     setAllCategories(catRes.data)
+  //   }).finally(() => setLoading(false))
+  // }
 
-  useEffect(() => { fetchData() }, [workspaceId])
+  // useEffect(() => { fetchData() }, [workspaceId])
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        employmentType: profile.employmentType ?? 'SELF_EMPLOYED',
+        taxableCategories: profile.taxableCategories ?? [],
+        businessSector: profile.businessSector ?? 'GENERAL',
+        businessSize: profile.businessSize ?? 'SMALL',
+        handlesPaye: profile.handlesPaye ?? false,
+        vatRegistered: profile.vatRegistered ?? false,
+        deductibleCategories: profile.deductibleCategories ?? [],
+      })
+    }
+  }, [profile])
 
   const handleSaveProfile = async () => {
     if (!workspaceId) return
     setSaving(true)
     try {
       await api.patch(workspaceUrl(workspaceId, '/analytics/tax/profile'), profileForm)
-      await fetchData()
+      queryClient.invalidateQueries({ queryKey: ['tax', workspaceId] })
       setShowSetup(false)
     } finally {
       setSaving(false)

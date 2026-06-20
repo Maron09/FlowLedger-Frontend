@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import api, { workspaceUrl } from '../lib/axios'
 
 interface Overview {
@@ -23,25 +23,29 @@ interface MonthlyTrend {
 }
 
 export function useAnalytics(workspaceId: string, month?: string) {
-  const [overview, setOverview] = useState<Overview | null>(null)
-  const [categories, setCategories] = useState<CategoryBreakdown[]>([])
-  const [trend, setTrend] = useState<MonthlyTrend[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useQuery({
+    queryKey: ['analytics', workspaceId, month],
+    queryFn: async () => {
+      const params = month ? `?month=${month}` : ''
+      const [overviewRes, categoriesRes, trendRes] = await Promise.all([
+        api.get(workspaceUrl(workspaceId, `/analytics/overview${params}`)),
+        api.get(workspaceUrl(workspaceId, `/analytics/categories${params}`)),
+        api.get(workspaceUrl(workspaceId, '/analytics/trend?months=6')),
+      ])
+      return {
+        overview: overviewRes.data as Overview,
+        categories: categoriesRes.data as CategoryBreakdown[],
+        trend: trendRes.data as MonthlyTrend[],
+      }
+    },
+    enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
+  })
 
-  useEffect(() => {
-    if (!workspaceId) return
-    const params = month ? `?month=${month}` : ''
-
-    Promise.all([
-      api.get(workspaceUrl(workspaceId, `/analytics/overview${params}`)),
-      api.get(workspaceUrl(workspaceId, `/analytics/categories${params}`)),
-      api.get(workspaceUrl(workspaceId, '/analytics/trend?months=6')),
-    ]).then(([overviewRes, categoriesRes, trendRes]) => {
-      setOverview(overviewRes.data)
-      setCategories(categoriesRes.data)
-      setTrend(trendRes.data)
-    }).finally(() => setLoading(false))
-  }, [workspaceId, month])
-
-  return { overview, categories, trend, loading }
+  return {
+    overview: data?.overview ?? null,
+    categories: data?.categories ?? [],
+    trend: data?.trend ?? [],
+    loading: isLoading,
+  }
 }

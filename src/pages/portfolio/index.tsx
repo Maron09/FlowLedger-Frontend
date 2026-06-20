@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../../lib/axios'
+import { usePortfolio, useInvalidatePortfolio } from '../../hooks/usePortfolio'
 
 interface Trade {
   id: string
@@ -50,25 +51,10 @@ function formatCurrency(amount: number, currency: string) {
 
 export default function PortfolioPage() {
   const { workspaceId } = useParams()
-  const [positions, setPositions] = useState<Position[]>([])
-  const [summary, setSummary] = useState<Summary | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { positions, summary, loading } = usePortfolio(workspaceId!)
+  const invalidatePortfolio = useInvalidatePortfolio()
   const [showAddModal, setShowAddModal] = useState(false)
   const [expandedPosition, setExpandedPosition] = useState<string | null>(null)
-
-  const fetchPortfolio = async () => {
-    try {
-      const { data } = await api.get(`/w/${workspaceId}/portfolio`)
-      setPositions(data.positions)
-      setSummary(data.summary)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { fetchPortfolio() }, [workspaceId])
 
   if (loading) {
     return (
@@ -229,7 +215,7 @@ export default function PortfolioPage() {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false)
-            fetchPortfolio()
+            invalidatePortfolio(workspaceId!)
           }}
         />
       )}
@@ -240,7 +226,7 @@ export default function PortfolioPage() {
     if (!confirm('Delete this trade?')) return
     try {
       await api.delete(`/w/${workspaceId}/portfolio/trades/${tradeId}`)
-      fetchPortfolio()
+      invalidatePortfolio(workspaceId!)
     } catch (err) {
       console.error(err)
     }

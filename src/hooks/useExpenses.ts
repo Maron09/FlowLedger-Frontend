@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api, { workspaceUrl } from '../lib/axios'
 
 interface Expense {
@@ -11,15 +11,28 @@ interface Expense {
 }
 
 export function useRecentExpenses(workspaceId: string) {
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data, isLoading } = useQuery({
+    queryKey: ['expenses', workspaceId],
+    queryFn: async () => {
+      const { data } = await api.get(
+        workspaceUrl(workspaceId, '/expenses?limit=5&sortBy=date&sortOrder=desc')
+      )
+      return data.items as Expense[]
+    },
+    enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
+  })
 
-  useEffect(() => {
-    if (!workspaceId) return
-    api.get(workspaceUrl(workspaceId, '/expenses?limit=5&sortBy=date&sortOrder=desc'))
-      .then(({ data }) => setExpenses(data.items))
-      .finally(() => setLoading(false))
-  }, [workspaceId])
+  return {
+    expenses: data ?? [],
+    loading: isLoading,
+  }
+}
 
-  return { expenses, loading }
+export function useInvalidateExpenses() {
+  const queryClient = useQueryClient()
+  return (workspaceId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['expenses', workspaceId] })
+    queryClient.invalidateQueries({ queryKey: ['analytics', workspaceId] })
+  }
 }

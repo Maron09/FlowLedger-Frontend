@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '../lib/axios'
 import { useWorkspaceRole } from '../hooks/useWorkspaceRole'
+import { useBudgets, useInvalidateBudgets } from '../hooks/useBudgets'
+import { useCategories } from '../hooks/useCategories'
 
 interface Budget {
   id: string
@@ -32,26 +34,28 @@ function formatNaira(amount: number) {
 export default function BudgetsPage() {
   const { workspaceId } = useParams<{ workspaceId: string }>()
   const { isAdmin } = useWorkspaceRole()
-  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const { budgets: budgetStatuses, loading } = useBudgets(workspaceId!)
+  const { categories } = useCategories(workspaceId!)
+  const invalidateBudgets = useInvalidateBudgets()
   const [showForm, setShowForm] = useState(false)
   const [editBudget, setEditBudget] = useState<BudgetStatus | null>(null)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const fetchData = () => {
-    Promise.all([
-      api.get(`/w/${workspaceId}/analytics/budgets`),
-      api.get(`/w/${workspaceId}/categories`),
-    ]).then(([budgetsRes, categoriesRes]) => {
-      setBudgetStatuses(budgetsRes.data)
-      setCategories(categoriesRes.data)
-    }).finally(() => setLoading(false))
-  }
+  // const fetchData = () => {
+  //   Promise.all([
+  //     api.get(`/w/${workspaceId}/analytics/budgets`),
+  //     api.get(`/w/${workspaceId}/categories`),
+  //   ]).then(([budgetsRes, categoriesRes]) => {
+  //     setBudgetStatuses(budgetsRes.data)
+  //     setCategories(categoriesRes.data)
+  //   }).finally(() => setLoading(false))
+  // }
 
-  useEffect(() => { if (workspaceId) fetchData() }, [workspaceId])
+  // useEffect(() => { if (workspaceId) fetchData() }, [workspaceId])
+
+  invalidateBudgets(workspaceId!)
 
   const openCreate = () => {
     setEditBudget(null)
@@ -75,7 +79,7 @@ export default function BudgetsPage() {
       await api.post(`/w/${workspaceId}/budgets`, { categoryId: form.categoryId, amount: Number(form.amount) })
       setShowForm(false)
       setForm({ categoryId: '', amount: '' })
-      fetchData()
+      invalidateBudgets(workspaceId!)
     } catch (err: any) {
       const msg = err.response?.data?.message
       setError(Array.isArray(msg) ? msg[0] : msg || 'Failed to save')
@@ -87,7 +91,7 @@ export default function BudgetsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this budget?')) return
     await api.delete(`/w/${workspaceId}/budgets/${id}`)
-    fetchData()
+    invalidateBudgets(workspaceId!)
   }
 
   const statusColor = (status: string) => {

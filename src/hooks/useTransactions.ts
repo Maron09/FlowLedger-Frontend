@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api, { workspaceUrl } from '../lib/axios'
 
 interface Transaction {
@@ -20,31 +21,48 @@ interface Meta {
 }
 
 export function useTransactions(workspaceId: string) {
-  const [expenses, setExpenses] = useState<Transaction[]>([])
-  const [income, setIncome] = useState<Transaction[]>([])
-  const [meta, setMeta] = useState<Meta | null>(null)
-  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    if (!workspaceId) return
-    setLoading(true)
-    const params = new URLSearchParams({
-      page: String(page),
-      limit: '10',
-      ...(search ? { search } : {}),
-    })
+  const { data, isLoading } = useQuery({
+    queryKey: ['transactions', workspaceId, page, search],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: '10',
+        ...(search ? { search } : {}),
+      })
+      const [expRes, incRes] = await Promise.all([
+        api.get(workspaceUrl(workspaceId, `/expenses?${params}`)),
+        api.get(workspaceUrl(workspaceId, `/income?${params}`)),
+      ])
+      return {
+        expenses: expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })) as Transaction[],
+        income: incRes.data.items.map((i: any) => ({ ...i, type: 'income' })) as Transaction[],
+        meta: expRes.data.meta as Meta,
+      }
+    },
+    enabled: !!workspaceId,
+    staleTime: 1000 * 60 * 5,
+  })
 
-    Promise.all([
-      api.get(workspaceUrl(workspaceId, `/expenses?${params}`)),
-      api.get(workspaceUrl(workspaceId, `/income?${params}`)),
-    ]).then(([expRes, incRes]) => {
-      setExpenses(expRes.data.items.map((e: any) => ({ ...e, type: 'expense' })))
-      setIncome(incRes.data.items.map((i: any) => ({ ...i, type: 'income' })))
-      setMeta(expRes.data.meta)
-    }).finally(() => setLoading(false))
-  }, [workspaceId, page, search])
+  return {
+    expenses: data?.expenses ?? [],
+    income: data?.income ?? [],
+    meta: data?.meta ?? null,
+    loading: isLoading,
+    page,
+    setPage,
+    search,
+    setSearch,
+  }
+}
 
-  return { expenses, income, meta, loading, page, setPage, search, setSearch }
+export function useInvalidateTransactions() {
+  const queryClient = useQueryClient()
+  return (workspaceId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['transactions', workspaceId] })
+    queryClient.invalidateQueries({ queryKey: ['analytics', workspaceId] })
+    queryClient.invalidateQueries({ queryKey: ['expenses', workspaceId] })
+  }
 }
